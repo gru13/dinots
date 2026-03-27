@@ -419,12 +419,20 @@ function renderOptionsChips() {
 }
 
 function showCustomOption() {
+  const emojiInput = document.getElementById('options-emoji-input') as HTMLInputElement | null;
+  const textInput = document.getElementById('options-input') as HTMLInputElement | null;
+  if (emojiInput && !emojiInput.value.trim()) emojiInput.value = '🙂';
+  if (textInput) textInput.value = '';
   document.getElementById('options-chips-wrap')!.style.display = 'none';
   document.getElementById('options-custom-wrap')!.style.display = 'flex';
 }
 function hideCustomOption() {
   const cw = document.getElementById('options-custom-wrap');
+  const emojiInput = document.getElementById('options-emoji-input') as HTMLInputElement | null;
+  const textInput = document.getElementById('options-input') as HTMLInputElement | null;
   if (cw) cw.style.display = 'none';
+  if (emojiInput) emojiInput.value = '🙂';
+  if (textInput) textInput.value = '';
   document.getElementById('options-chips-wrap')!.style.display = 'flex';
 }
 function submitCustomOption() {
@@ -432,7 +440,8 @@ function submitCustomOption() {
   const oIn = document.getElementById('options-input') as HTMLInputElement;
   const label = oIn.value.trim();
   if (label && activeOptionsContext) {
-    const text = (eIn.value || '') + (eIn.value ? ' ' : '') + label;
+    const emoji = (eIn.value || '').trim();
+    const text = emoji ? `${emoji} ${label}` : label;
     const prefix = optionsPath.length > 0 ? optionsPath.join(' • ') + ' • ' : '';
     const fullVal = prefix + text;
     
@@ -442,6 +451,7 @@ function submitCustomOption() {
 
     if (activeOptionsContext.mode === 'instant') logInstantOption(fullVal);
     else { selectedOptions.add(fullVal); renderOptionsChips(); hideCustomOption(); }
+    eIn.value = '🙂';
     oIn.value = '';
   }
 }
@@ -499,9 +509,13 @@ function setupQuickActions() {
     document.getElementById('qa-close-btn')?.addEventListener('click', () => {
       document.getElementById('qa-input-wrap')!.style.display = 'none';
       qaWrap.style.display = 'flex';
+      const emojiInput = document.getElementById('qa-emoji-input') as HTMLInputElement | null;
+      const textInput = document.getElementById('qa-input') as HTMLInputElement | null;
+      if (emojiInput) emojiInput.value = '🙂';
+      if (textInput) textInput.value = '';
     });
     document.getElementById('qa-submit-btn')?.addEventListener('click', () => {
-      const emoji = (document.getElementById('qa-emoji-input') as HTMLInputElement).value || '📌';
+      const emoji = (document.getElementById('qa-emoji-input') as HTMLInputElement).value || '🙂';
       const label = (document.getElementById('qa-input') as HTMLInputElement).value.trim();
       const type = (document.getElementById('qa_type_val') as HTMLInputElement).value as 'instant'|'duration';
       if (label) {
@@ -513,6 +527,7 @@ function setupQuickActions() {
         
         document.getElementById('qa-input-wrap')!.style.display = 'none';
         qaWrap.style.display = 'flex';
+        (document.getElementById('qa-emoji-input') as HTMLInputElement).value = '🙂';
         (document.getElementById('qa-input') as HTMLInputElement).value = '';
       }
     });
@@ -563,13 +578,17 @@ function setupQuickActions() {
 
       const showCustomPanic = () => {
         const customWrap = document.getElementById('panic-custom-wrap');
+        const emojiInput = document.getElementById('panic-emoji-input') as HTMLInputElement | null;
+        if (emojiInput && !emojiInput.value.trim()) emojiInput.value = '🚨';
         if (customWrap) customWrap.style.display = 'flex';
       };
 
       const hideCustomPanic = () => {
         const customWrap = document.getElementById('panic-custom-wrap');
+        const emojiInput = document.getElementById('panic-emoji-input') as HTMLInputElement | null;
         const input = document.getElementById('panic-input') as HTMLInputElement | null;
         if (customWrap) customWrap.style.display = 'none';
+        if (emojiInput) emojiInput.value = '🚨';
         if (input) input.value = '';
       };
 
@@ -579,7 +598,7 @@ function setupQuickActions() {
         const label = input?.value.trim() || '';
         if (!label) return;
 
-        const emoji = (emojiIn?.value || '').trim();
+        const emoji = (emojiIn?.value || '🚨').trim();
         const triggerText = `${emoji}${emoji ? ' ' : ''}${label}`;
 
         addCustomPanicTrigger(triggerText);
@@ -659,10 +678,14 @@ function normalizeInfiniteQuickRowScroll(qaWrap: HTMLElement) {
 function showQuickActionCustomInput() {
   const qaWrap = document.getElementById('qa-scroll-wrap');
   const inputWrap = document.getElementById('qa-input-wrap');
+  const emojiInput = document.getElementById('qa-emoji-input') as HTMLInputElement | null;
+  const textInput = document.getElementById('qa-input') as HTMLInputElement | null;
   if (!qaWrap || !inputWrap) return;
 
   inputWrap.style.display = 'flex';
   qaWrap.style.display = 'none';
+  if (emojiInput && !emojiInput.value.trim()) emojiInput.value = '🙂';
+  if (textInput) textInput.value = '';
   inputWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
