@@ -1,6 +1,18 @@
-import { CONFIG, STATE, bootstrapConfig } from '../../modules/state';
+import { CONFIG, STATE, bootstrapConfig, clearAllLogs } from '../../modules/state';
 import { events, EVENTS } from '../../modules/events';
 import { escapeHtml } from './utils';
+
+function downloadLogBackup() {
+  const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dinots_${STATE.date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 export function renderAppInfo() {
   const el = document.getElementById('app-version-info');
@@ -22,6 +34,7 @@ export function bindImportExport() {
   const fileUi = document.getElementById('import-config-file') as HTMLInputElement | null;
 
   const exportLogBtn = document.getElementById('btn-export-log');
+  const resetLogBtn = document.getElementById('btn-reset-log');
   const importLogBtn = document.getElementById('btn-import-log');
   const fileLog = document.getElementById('import-file') as HTMLInputElement | null;
 
@@ -68,15 +81,15 @@ export function bindImportExport() {
 
   if (exportLogBtn) {
     exportLogBtn.addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `dinots_${STATE.date}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadLogBackup();
+    });
+  }
+
+  if (resetLogBtn) {
+    resetLogBtn.addEventListener('click', () => {
+      if (!window.confirm('Export logs and then delete all current logs?')) return;
+      downloadLogBackup();
+      clearAllLogs();
     });
   }
 

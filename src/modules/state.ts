@@ -913,6 +913,18 @@ export function resetForStartDay(intention: string) {
   _triggerSync();
 }
 
+export function clearAllLogs() {
+  STATE.timeline = [];
+  STATE.expenses = [];
+  STATE.tasks = [];
+
+  events.emit(EVENTS.STATE_READY, STATE);
+  events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
+  events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
+  events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
+  _triggerSync();
+}
+
 export function addExpense(amount: number, note: string, category: string) {
   STATE.expenses.push({ id: `exp_${Date.now()}`, amount, note, category, timestamp: Date.now() });
   events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
