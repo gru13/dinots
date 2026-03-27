@@ -1,5 +1,5 @@
-import { CONFIG } from '../../modules/state';
-import { escapeHtml, escapeHtmlAttr } from './utils';
+import { CONFIG } from '../../../modules/state';
+import { escapeHtml, escapeHtmlAttr } from '../utils';
 
 function splitEmojiAndText(rawValue: string) {
   const value = String(rawValue || '').trim();
@@ -17,6 +17,15 @@ function splitEmojiAndText(rawValue: string) {
     emoji: first,
     text: value.slice(first.length).trim()
   };
+}
+
+function renderValueDisplay(rawValue: string) {
+  const parsed = splitEmojiAndText(rawValue);
+  const emoji = parsed.emoji || '🙂';
+  const emojiClass = parsed.emoji ? 'settings-option-value-emoji' : 'settings-option-value-emoji settings-option-value-emoji-fallback';
+  const emojiPart = `<span class="${emojiClass}">${escapeHtml(emoji)}</span>`;
+  const textPart = `<span class="settings-option-value-text">${escapeHtml(parsed.text || rawValue)}</span>`;
+  return `<span class="settings-option-value-display">${emojiPart}${textPart}</span>`;
 }
 
 function renderOptionActionButtons(id: string, isDeletePending: boolean, isEditing: boolean) {
@@ -48,13 +57,13 @@ function renderSubValue(optionKey: string, parentValue: string, subValue: string
     <div class="settings-option-subitem" draggable="${isEditing ? 'false' : 'true'}" data-opt-sub-row="1" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(parentValue)}" data-opt-sub="${escapeHtmlAttr(subValue)}">
       ${isEditing ? `
       <div class="settings-option-inline-edit-row">
-        <input class="form-input settings-option-emoji-input" data-edit-sub-value-emoji-input type="text" value="${escapeHtmlAttr(parsed.emoji)}" placeholder="🙂" />
+        <input class="form-input settings-option-emoji-input" data-edit-sub-value-emoji-input type="text" value="${escapeHtmlAttr(parsed.emoji || '🙂')}" placeholder="🙂" />
         <input class="form-input settings-option-input-compact" data-edit-sub-value-text-input type="text" value="${escapeHtmlAttr(parsed.text)}" placeholder="Sub text..." />
         <button type="button" class="quick-chip settings-action-btn settings-option-mini-btn" data-opt-action="save-sub-value" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(parentValue)}" data-opt-sub="${escapeHtmlAttr(subValue)}">Save</button>
         <button type="button" class="quick-chip settings-action-btn settings-option-mini-btn" data-opt-action="cancel-sub-value" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(parentValue)}" data-opt-sub="${escapeHtmlAttr(subValue)}">Cancel</button>
       </div>
       ` : `
-      <span class="settings-option-subtext">${escapeHtml(subValue)}</span>
+      <span class="settings-option-subtext">${renderValueDisplay(subValue)}</span>
       <div class="settings-option-actions">
         <button type="button" class="quick-chip settings-action-btn settings-action-edit settings-action-icon-btn settings-option-icon-btn" data-opt-action="edit-sub-value" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(parentValue)}" data-opt-sub="${escapeHtmlAttr(subValue)}" title="Edit">✎</button>
         <button type="button" class="quick-chip settings-action-btn settings-action-delete settings-action-icon-btn settings-option-icon-btn" data-opt-action="del-sub-value" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(parentValue)}" data-opt-sub="${escapeHtmlAttr(subValue)}" title="Remove">🗑</button>
@@ -76,14 +85,14 @@ function renderOptionValue(optionId: string, optionKey: string, value: string, i
     <div class="settings-option-card" draggable="${isEditing ? 'false' : 'true'}" data-opt-value-row="1" data-opt-id="${escapeHtmlAttr(optionId)}" data-opt-value="${escapeHtmlAttr(value)}">
       ${isEditing ? `
       <div class="settings-option-inline-edit-row">
-        <input class="form-input settings-option-emoji-input" data-edit-value-emoji-input type="text" value="${escapeHtmlAttr(parsed.emoji)}" placeholder="🙂" />
+        <input class="form-input settings-option-emoji-input" data-edit-value-emoji-input type="text" value="${escapeHtmlAttr(parsed.emoji || '🙂')}" placeholder="🙂" />
         <input class="form-input settings-option-input-compact" data-edit-value-text-input type="text" value="${escapeHtmlAttr(parsed.text)}" placeholder="Option text..." />
         <button type="button" class="quick-chip settings-action-btn settings-option-mini-btn" data-opt-action="save-value" data-opt-id="${escapeHtmlAttr(optionId)}" data-opt-value="${escapeHtmlAttr(value)}">Save</button>
         <button type="button" class="quick-chip settings-action-btn settings-option-mini-btn" data-opt-action="cancel-value" data-opt-id="${escapeHtmlAttr(optionId)}" data-opt-value="${escapeHtmlAttr(value)}">Cancel</button>
       </div>
       ` : `
       <div class="settings-option-head">
-        <span class="settings-option-name">${escapeHtml(value)}</span>
+        <span class="settings-option-name">${renderValueDisplay(value)}</span>
         <div class="settings-option-actions">
           <button type="button" class="quick-chip settings-action-btn settings-action-edit settings-action-icon-btn settings-option-icon-btn" data-opt-action="edit-value" data-opt-id="${escapeHtmlAttr(optionId)}" data-opt-value="${escapeHtmlAttr(value)}" title="Edit option">✎</button>
           <button type="button" class="quick-chip settings-action-btn settings-action-delete settings-action-icon-btn settings-option-icon-btn" data-opt-action="del-value" data-opt-id="${escapeHtmlAttr(optionId)}" data-opt-value="${escapeHtmlAttr(value)}" title="Remove option">🗑</button>
@@ -94,7 +103,7 @@ function renderOptionValue(optionId: string, optionKey: string, value: string, i
         ${subValuesHtml}
       </div>
       <div class="settings-option-add-sub-row">
-        <input class="form-input settings-option-emoji-input" data-add-sub-value-emoji-input data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(value)}" type="text" placeholder="🙂" />
+        <input class="form-input settings-option-emoji-input" data-add-sub-value-emoji-input data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(value)}" type="text" value="🙂" placeholder="🙂" />
         <input class="form-input settings-option-input-compact" data-add-sub-value-text-input data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(value)}" type="text" placeholder="Sub text..." />
         <button type="button" class="quick-chip settings-action-btn settings-option-mini-btn" data-opt-action="add-sub-value" data-opt-key="${escapeHtmlAttr(optionKey)}" data-opt-parent="${escapeHtmlAttr(value)}">+</button>
       </div>
@@ -151,7 +160,7 @@ function renderOptionRow(
           ${valuesHtml}
         </div>
         <div class="settings-options-add-row">
-          <input class="form-input settings-option-emoji-input" data-add-value-emoji-input type="text" placeholder="🙂" />
+          <input class="form-input settings-option-emoji-input" data-add-value-emoji-input type="text" value="🙂" placeholder="🙂" />
           <input class="form-input settings-option-input" data-add-value-text-input type="text" placeholder="Option text..." />
           <button type="button" class="quick-chip settings-action-btn settings-option-add-btn" data-opt-action="add-value" data-opt-id="${escapeHtmlAttr(id)}">Add</button>
         </div>

@@ -74,6 +74,31 @@
   word-break: break-word;
 }
 
+.settings-option-value-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-option-value-emoji {
+  display: inline-flex;
+  width: 20px;
+  min-width: 20px;
+  justify-content: center;
+}
+
+.settings-option-value-emoji-fallback {
+  opacity: 0.9;
+}
+
+.settings-option-value-text {
+  min-width: 0;
+  flex: 1;
+  word-break: break-word;
+}
+
 .settings-option-sublist {
   display: flex;
   flex-direction: column;
