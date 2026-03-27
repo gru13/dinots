@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  
+  <!-- PWA Setup -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <meta name="theme-color" content="#E8A830" />
+  
+  <title>DINOTS - Daily IN Out Tracking System</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/styles/app.css" />
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-greeting" id="time-greeting">Good Day</div>
+      <div class="top-name"><span id="header-user-name">Guest</span> <em id="top-emoji">🔥</em></div>
+    </div>
+    <div style="text-align:right">
+      <div class="top-date" id="top-date">Loading Date...</div>
+      <div class="top-day-badge" id="top-badge">Phase 0 · Week 1</div>
+    </div>
+  </div>
+
+  <!-- SCREEN: LOG -->
+  <div class="screen active" id="screen-log">
+    <div class="intention-wrap" style="margin-bottom: 12px;">
+      <div class="sec-label" id="lbl-intention" style="margin:0;">Today's One Thing</div>
+      <input type="text" id="daily-intention" class="intention-input" placeholder="What is your non-negotiable?">
+    </div>
+
+    <div class="sec-label" id="lbl-battery" style="margin-top: 0;">Mental Battery</div>
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text3); font-weight: 500;">How wired are you?</div>
+        <div id="battery-val-display" style="font-family: 'DM Mono', monospace; font-size: 13px; font-weight: bold; color: var(--text); min-width: 145px; text-align: right;">(Okay) 🔋 60%</div>
+      </div>
+      <input type="range" id="battery-slider" class="battery-slider" min="0" max="100" step="1" value="60">
+    </div>
+
+    <div class="sec-label" id="lbl-activity">Log Activity</div>
+    <div class="dial-container">
+      <div class="dial-center-marker" id="dial-marker"></div>
+      <div class="wheel" id="wheel"></div>
+    </div>
+
+    <div class="sec-label" id="lbl-quick">Quick Actions</div>
+    <div style="position: relative; margin-bottom: 12px;">
+      <div id="qa-scroll-wrap" class="quick-actions-row"></div>
+      <div id="qa-input-wrap" style="display:none; flex-direction: column; gap: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="qa-emoji-input" value="📌" />
+          <input class="form-input" style="flex:1;" type="text" id="qa-input" placeholder="Custom action..." />
+          <button class="task-add-btn" style="width: 44px; height: 44px;" id="qa-submit-btn">+</button>
+          <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" id="qa-close-btn">×</button>
+        </div>
+        <div style="display: flex; gap: 8px; padding: 0 4px;">
+          <button class="quick-chip active" id="qa-btn-instant" style="flex:1; justify-content:center;">⚡ Instant</button>
+          <button class="quick-chip" id="qa-btn-duration" style="flex:1; justify-content:center;">⏱️ Duration</button>
+          <input type="hidden" id="qa_type_val" value="instant">
+        </div>
+      </div>
+    </div>
+
+    <div id="panic-wrap"><button class="panic-btn" id="panic-main-btn">🚨 Caught in a Fatal Loop?</button></div>
+    <div id="panic-triggers" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-top:12px;">
+      <div class="sec-label" id="lbl-panic-trigger" style="margin-top:0;">What triggered the loop?</div>
+      <div id="panic-chips-flex" style="display: flex; gap: 12px; align-items: center;">
+        <div class="quick-actions-row" id="panic-chips-wrap" style="flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 0;"></div>
+        <div style="flex-shrink: 0; border-left: 1px solid var(--border2); padding-left: 12px;">
+          <button class="quick-chip" id="panic-cancel-btn">Cancel</button>
+        </div>
+      </div>
+      <div id="panic-custom-wrap" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="panic-emoji-input" value="🚨" />
+          <input class="form-input" style="flex:1;" type="text" id="panic-input" placeholder="Custom loop trigger..." />
+          <button class="task-add-btn" style="width: 44px; height: 44px;" id="panic-submit-btn">+</button>
+          <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" id="panic-close-btn">×</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label" id="tl-label" style="display:none">Timeline</div>
+    <div class="card" id="timeline-wrap" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;display:none">
+      <div id="timeline-list"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN: MONEY -->
+  <div class="screen" id="screen-money">
+    <div class="money-hero" id="money-hero-card">
+      <div class="money-label" id="lbl-money-hero" style="font-size:10px; text-transform:uppercase; color:var(--text3);">Spent Today</div>
+      <div class="money-amount" id="money-total">--</div>
+      <div class="money-sub" id="money-left">Calculating...</div>
+    </div>
+    <div class="sec-label" id="lbl-money-add">Add Expense</div>
+    <div class="money-bento-form">
+      <div class="bento-left" id="money-cat-list"></div>
+      <div class="bento-right">
+        <input class="form-input" type="number" id="exp-amount" placeholder="Amount" style="color: var(--teal); font-size: 18px;" />
+        <input class="form-input" type="text" id="exp-note" placeholder="Note..." />
+      </div>
+      <div class="bento-bottom"><button class="add-btn" id="add-exp-btn">Add Expense</button></div>
+    </div>
+    <div class="sec-label" id="lbl-money-dist">Distribution</div>
+    <div class="dist-card" id="dist-graph"></div>
+    <div class="sec-label" id="lbl-money-hist">History</div>
+    <div class="card" id="expense-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;"></div>
+  </div>
+
+  <!-- SCREEN: TASKS -->
+  <div class="screen" id="screen-tasks">
+    <div class="task-stats">
+      <div class="task-stat"><div class="ts-val" id="stat-total">0</div><div class="ts-lbl">Total</div></div>
+      <div class="task-stat"><div class="ts-val" id="stat-done" style="color:var(--teal)">0</div><div class="ts-lbl">Done</div></div>
+      <div class="task-stat"><div class="ts-val" id="stat-left" style="color:var(--amber)">0</div><div class="ts-lbl">Left</div></div>
+    </div>
+    <div class="sec-label" id="lbl-tasks-add">Add task</div>
+    <div class="task-add-row">
+      <input class="form-input" type="text" id="task-input" placeholder="To-do..." />
+      <button class="task-add-btn" id="add-task-btn">+</button>
+    </div>
+    <div class="sec-label" id="lbl-tasks-list">Today</div>
+    <div class="card" id="task-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;"></div>
+  </div>
+
+  <!-- SCREEN: SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="sec-label" id="lbl-set-cloud">Account & Cloud</div>
+    <div class="settings-group">
+      <div class="auth-user-pill">
+        <div class="user-avatar" id="user-photo">👤</div>
+        <div><div id="user-name" style="font-size:14px; font-weight:600;">Guest User</div><div id="user-email" style="font-size:11px; color:var(--text3);">Not signed in</div></div>
+      </div>
+      <button class="add-btn" id="login-btn">Sign in with Google</button>
+    </div>
+    <div class="sec-label" id="lbl-set-vault">Vault Security (Auto-E2EE)</div>
+    <div class="settings-group">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <div id="vault-status-icon" style="font-size: 24px;">🔒</div>
+        <div><div id="vault-status-title" style="font-size: 13px; font-weight: 600;">Vault Locked</div><div id="vault-status-desc" style="font-size: 11px; color: var(--text3);">Sign in to unlock.</div></div>
+      </div>
+    </div>
+    <div class="sec-label" id="lbl-set-adv">Advanced (Backup & UI)</div>
+    <details class="custom-details">
+      <summary class="custom-summary">⚙️ Manage Data & Custom UI</summary>
+      <div class="details-content">
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" id="btn-import-ui">⬆️ Import UI</button>
+          <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" id="btn-export-ui">⬇️ Export UI</button>
+        </div>
+        <button class="add-btn" style="background:var(--rb); border:1px solid var(--rbr); color:var(--red); margin-bottom:24px;" id="btn-reset-ui">Reset to Default</button>
+        <input type="file" id="import-config-file" accept=".json" style="display:none;">
+        <div style="display: flex; gap: 8px;">
+          <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" id="btn-import-log">⬆️ Import Logs</button>
+          <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" id="btn-export-log">⬇️ Export Logs</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none;">
+      </div>
+    </details>
+    <div class="sec-label" id="lbl-set-info">App Info</div>
+    <div id="app-version-info" style="font-size:11px; color:var(--text3); padding-bottom: 24px;"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-target="log"><div class="nav-dot"></div><div class="ico" id="nav-log-ico">📓</div><span id="nav-log-lbl">Log</span></button>
+    <button class="nav-btn" data-target="money"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-money-ico">💰</div><span id="nav-money-lbl">Money</span></button>
+    <button class="nav-btn" data-target="tasks"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-tasks-ico">✅</div><span id="nav-tasks-lbl">Tasks</span></button>
+    <button class="nav-btn" data-target="settings"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-settings-ico">⚙️</div><span id="nav-settings-lbl">Set</span></button>
+  </nav>
+
+  <!-- Modals -->
+  <div id="eod-modal" class="modal-overlay"><div class="modal-card"><div class="modal-title">Wrap Up</div><div id="eod-intention-text" style="font-size: 18px; color: var(--amber); margin-bottom: 24px;"></div><div style="display:flex;gap:12px;"><button class="add-btn" style="background:var(--card2);color:var(--text);" id="btn-eod-missed">Missed</button><button class="add-btn" id="btn-eod-crushed">Crushed</button></div></div></div>
+  <div id="start-day-modal" class="modal-overlay"><div class="modal-card"><div class="modal-title">Morning</div><input type="text" id="new-day-intention" class="form-input" placeholder="Today's Goal..."><div style="display:flex;gap:12px;margin-top:16px"><button class="add-btn" style="background:var(--card2);color:var(--text);" id="btn-sd-cancel">Cancel</button><button class="add-btn" id="btn-sd-start">Start</button></div></div></div>
+
+  <!-- GENERIC OPTIONS MODAL -->
+  <div id="options-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title" id="lbl-options-modal" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Details</div>
+      <div id="options-chips-wrap" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom: 24px;"></div>
+      
+      <div id="options-custom-wrap" style="display:none; flex-direction: column; gap: 8px; margin-bottom: 24px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="options-emoji-input" value="📌" />
+          <input class="form-input" style="flex:1;" type="text" id="options-input" placeholder="Option name..." />
+          <button class="task-add-btn" style="width: 44px; height: 44px;" id="opt-submit-btn">+</button>
+          <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" id="opt-close-btn">×</button>
+        </div>
+      </div>
+      
+      <div id="options-multi-btns" style="display:flex; gap:12px;">
+        <button class="add-btn" style="background:var(--card2);color:var(--text);" id="opt-skip-btn">Skip</button>
+        <button class="add-btn" id="opt-save-btn">Save Log</button>
+      </div>
+      
+      <div id="options-single-btns" style="display:none; gap:12px;">
+        <button class="add-btn" style="background:var(--card2);color:var(--text);" id="opt-cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-msg"></div>
+
+  <!-- Entry Point -->
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

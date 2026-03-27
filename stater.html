@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Guru's Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   INTENT: DESIGN SYSTEM & CSS VARIABLES
+   Purpose: Centralize all colors, spacing, and 
+   theming so the app can be reskinned instantly 
+   via JSON configuration.
+═══════════════════════════════════════════════ */
+:root {
+  --bg: #0D0D0B;
+  --bg2: #141412;
+  --bg3: #1A1A17;
+  --card: #171715;
+  --card2: #1E1E1B;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.04);
+  --text: #E6E4DD;
+  --text2: #888680;
+  --text3: #525250;
+  
+  /* Accent Colors */
+  --amber: #E8A830;
+  --ab: rgba(232,168,48,0.08); 
+  --abr: rgba(232,168,48,0.2); 
+  --teal: #2DC98A;
+  --tb: rgba(45,201,138,0.08);
+  --tbr: rgba(45,201,138,0.2);
+  --blue: #5BA4E8;
+  --bb: rgba(91,164,232,0.08);
+  --bbr: rgba(91,164,232,0.2);
+  --red: #E86060;
+  --rb: rgba(232,96,96,0.08);
+  --rbr: rgba(232,96,96,0.2);
+  --pink: #E87AAA;
+  --pkb: rgba(232,122,170,0.08);
+  
+  /* Geometry */
+  --r: 12px; 
+  --rs: 8px; 
+  --nav-h: 64px; 
+}
+
+/* INTENT: Global Resets for Mobile-First App feel */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.6;
+  min-height: 100dvh; padding-bottom: var(--nav-h);
+}
+
+.top-bar {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 16px 20px 12px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.top-greeting { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; }
+.top-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); line-height: 1.2; }
+.top-name em { color: var(--amber); font-style: italic; }
+.top-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-align: right; }
+.top-day-badge { background: var(--ab); border: 1px solid var(--abr); color: var(--amber); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-top: 4px; display: inline-block; }
+
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
+  background: var(--bg2); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 200;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: none; border: none; color: var(--text3); font-family: 'DM Sans', sans-serif; font-size: 10px;
+  font-weight: 500; letter-spacing: .04em; cursor: pointer; transition: color .15s;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-btn .ico { font-size: 20px; line-height: 1; }
+.nav-btn.active { color: var(--amber); }
+.nav-btn.active .nav-dot { width: 4px; height: 4px; background: var(--amber); border-radius: 50%; margin-bottom: -4px; }
+
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+.sec-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin: 20px 0 10px; }
+.sec-label:first-child { margin-top: 4px; }
+
+.intention-wrap { margin-bottom: 24px; padding: 0 4px; }
+.intention-input {
+  background: transparent; border: none; width: 100%; color: var(--amber);
+  font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; font-style: italic; outline: none; margin-top: 4px;
+  border-bottom: 1px dashed var(--border); padding-bottom: 4px;
+}
+.intention-input::placeholder { color: var(--text3); font-style: italic; font-weight: 400; }
+
+.dial-container { background: var(--card2); border: 1px solid var(--border); border-radius: var(--r); padding: 20px 0; position: relative; overflow: hidden; margin-bottom: 24px; }
+.dial-center-marker { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 104px; height: 146px; border: 2px solid var(--amber); border-radius: var(--r); pointer-events: none; box-shadow: 0 0 20px rgba(232,168,48,0.1); z-index: 2; transition: border-color 0.3s, box-shadow 0.3s; }
+.wheel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding: 0 calc(50% - 52px); scrollbar-width: none; align-items: center; height: 130px; position: relative; z-index: 3; }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel-item { flex: 0 0 104px; height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; scroll-snap-align: center; color: var(--text3); transition: color 0.2s; cursor: pointer; user-select: none; position: relative; }
+.wheel-item[data-active="true"] { color: var(--text); }
+.wheel-emoji { font-size: 36px; margin-bottom: 8px; filter: grayscale(0.5); transition: filter 0.2s, transform 0.2s; }
+.wheel-item[data-active="true"] .wheel-emoji { filter: grayscale(0); transform: scale(1.05); }
+.wheel-ongoing-dot { color: var(--red); font-size: 18px; line-height: 0; position: absolute; top: 12px; right: 28px; animation: blink 1.5s infinite; }
+.wheel-hint { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0; transition: opacity 0.2s, transform 0.2s; transform: translateY(10px); margin-top: 6px; pointer-events: none; }
+.wheel-item[data-active="true"] .wheel-hint { opacity: 1; transform: translateY(0); }
+
+.form-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rs); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px; outline: none; transition: border-color .15s; }
+.form-input:focus { border-color: var(--abr); }
+.form-input::placeholder { color: var(--text3); }
+.add-btn { width: 100%; background: var(--teal); border: none; border-radius: var(--rs); color: #0D0D0B; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; cursor: pointer; transition: all .2s; letter-spacing: .02em; box-sizing: border-box; }
+.add-btn:active { opacity: 0.85; }
+
+.battery-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--bg3); outline: none; margin-top: 16px; margin-bottom: 4px; }
+.battery-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--text); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+
+.quick-actions-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.quick-actions-row::-webkit-scrollbar { display: none; }
+.quick-chip { background: var(--card2); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 500; padding: 8px 14px; border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+.quick-chip.active { background: var(--tb); border-color: var(--teal); color: var(--teal); }
+.panic-btn { width: 100%; background: var(--rb); border: 1px solid rgba(232,96,96,0.3); color: var(--red); border-radius: var(--rs); padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 12px; }
+
+.timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border2); align-items: flex-start; position: relative; }
+.timeline-item:last-child { border-bottom: none; }
+.timeline-item.nested { border-bottom: none; padding: 8px 12px; margin-top: -4px; margin-bottom: 4px; border-left: 2px solid var(--border2); background: rgba(255,255,255,0.02); border-radius: 0 var(--rs) var(--rs) 0; }
+.timeline-item.nested .tl-dot { width: 6px; height: 6px; background: transparent; border: 1.5px solid var(--text3); }
+.timeline-item.nested .tl-line { display: none; }
+.tl-dot-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 4px; flex-shrink: 0; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+.tl-line { width: 1px; flex: 1; background: var(--border2); margin-top: 4px; min-height: 14px; }
+.tl-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text3); min-width: 46px; flex-shrink: 0; padding-top: 2px; }
+.tl-time.ongoing { color: var(--red); animation: blink 1.5s infinite; }
+.tl-content { flex: 1; padding-right: 20px; }
+.tl-label { font-size: 13px; font-weight: 500; color: var(--text); }
+.tl-emoji { font-size: 13px; margin-right: 4px; }
+.tl-duration { font-size: 11px; color: var(--teal); font-weight: 600; margin-top: 2px; }
+.tl-action-icon { position: absolute; right: 0; top: 10px; color: var(--text3); font-size: 14px; cursor: pointer; padding: 0 4px; transition: color 0.2s; }
+
+.money-hero { background: linear-gradient(135deg, #1C1C18, #131310); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; text-align: center; position: relative; overflow: hidden; margin-bottom: 4px; transition: background 0.3s; }
+.money-hero.over-budget { background: linear-gradient(135deg, #251212, #130909); border-color: rgba(232, 96, 96, 0.2); }
+.money-amount { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 600; color: var(--teal); line-height: 1.1; margin: 4px 0; }
+
+.money-bento-form { display: grid; grid-template-columns: 120px 1fr; grid-template-rows: auto auto; gap: 12px; background: var(--card); padding: 16px; border-radius: var(--r); border: 1px solid var(--border); }
+.bento-left { grid-row: 1 / 2; grid-column: 1 / 2; display: flex; flex-direction: column; gap: 8px; height: 120px; overflow-y: auto; scrollbar-width: none; padding-right: 4px; }
+.bento-left::-webkit-scrollbar { display: none; }
+.bento-right { grid-row: 1 / 2; grid-column: 2 / 3; display: flex; flex-direction: column; gap: 10px; justify-content: flex-start; }
+.bento-bottom { grid-row: 2 / 3; grid-column: 1 / 3; }
+
+.dist-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 12px; }
+.dist-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.dist-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.dist-bar { height: 100%; transition: width 0.5s; }
+
+.task-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.task-stat { background: var(--card2); border: 1px solid var(--border); border-radius: var(--rs); padding: 12px; text-align: center; }
+.ts-val { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; color: var(--text); }
+.ts-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+.task-add-row { display: flex; gap: 8px; margin-bottom: 4px; }
+.task-add-btn { width: 44px; height: 44px; background: var(--amber); border: none; border-radius: var(--rs); color: #0D0D0B; font-size: 22px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.task-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border2); cursor: pointer; }
+.task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.task-item.done .task-check { background: var(--teal); border-color: var(--teal); }
+.task-item.done .task-check::after { content: '✓'; color: #0D0D0B; font-size: 11px; font-weight: 700; }
+.task-text { flex: 1; font-size: 14px; color: var(--text); line-height: 1.4; padding-top: 1px; }
+.task-item.done .task-text { color: var(--text3); text-decoration: line-through; }
+
+.settings-group { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; margin-bottom: 16px; }
+.auth-user-pill { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border2); }
+.user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--abr); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+.custom-details { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 16px; overflow: hidden; }
+.custom-summary { padding: 16px; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.custom-summary::after { content: '▼'; font-size: 10px; color: var(--text3); transition: transform 0.2s; }
+.custom-details[open] .custom-summary::after { transform: rotate(180deg); }
+.details-content { padding: 0 16px 16px 16px; border-top: 1px solid var(--border2); margin-top: 8px; padding-top: 16px; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; width: 100%; max-width: 360px; text-align: center; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+#toast-msg {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--teal); color: #0D0D0B; padding: 10px 20px; border-radius: 20px;
+  font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: all 0.3s;
+  z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.5); white-space: nowrap;
+}
+#toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (min-width: 600px) {
+  .screen, .top-bar { max-width: 480px; margin: 0 auto; }
+  .bottom-nav { max-width: 480px; left: 50%; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-bar-left">
+    <div class="top-greeting" id="time-greeting">Good Day</div>
+    <div class="top-name"><span id="header-user-name">Guest</span> <em id="top-emoji">🔥</em></div>
+  </div>
+  <div style="text-align:right">
+    <div class="top-date" id="top-date">Loading Date...</div>
+    <div class="top-day-badge" id="top-badge">Phase 0 · Week 1</div>
+  </div>
+</div>
+
+<div class="screen active" id="screen-log">
+  <div class="intention-wrap" style="margin-bottom: 12px;">
+    <div class="sec-label" id="lbl-intention" style="margin:0;">Today's One Thing</div>
+    <input type="text" id="daily-intention" class="intention-input" placeholder="What is your non-negotiable?">
+  </div>
+
+  <div class="sec-label" id="lbl-battery" style="margin-top: 0;">Mental Battery</div>
+  <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-size: 13px; color: var(--text3); font-weight: 500;">How wired are you?</div>
+      <div id="battery-val-display" style="font-family: 'DM Mono', monospace; font-size: 13px; font-weight: bold; color: var(--text); min-width: 145px; text-align: right;">(Okay) 🔋 60%</div>
+    </div>
+    <input type="range" id="battery-slider" class="battery-slider" min="0" max="100" step="1" value="60" oninput="updateBatteryDisplay()" onchange="registerBattery(); saveState()">
+  </div>
+
+  <div class="sec-label" id="lbl-activity">Log Activity</div>
+  <div class="dial-container"><div class="dial-center-marker" id="dial-marker"></div><div class="wheel" id="wheel" onscroll="updateWheel()"></div></div>
+
+  <div class="sec-label" id="lbl-quick">Quick Actions</div>
+  <div style="position: relative; margin-bottom: 12px;">
+    <div id="qa-scroll-wrap" class="quick-actions-row"></div>
+    <div id="qa-input-wrap" style="display:none; flex-direction: column; gap: 8px;">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="qa-emoji-input" value="📌" />
+        <input class="form-input" style="flex:1;" type="text" id="qa-input" placeholder="Custom action..." onkeydown="if(event.key==='Enter')submitCustomQA()" />
+        <button class="task-add-btn" style="width: 44px; height: 44px;" onclick="submitCustomQA()">+</button>
+        <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" onclick="hideCustomQA()">×</button>
+      </div>
+      <div style="display: flex; gap: 8px; padding: 0 4px;">
+        <button class="quick-chip active" id="qa-btn-instant" style="flex:1; justify-content:center;" onclick="setQAType('instant')">⚡ Instant</button>
+        <button class="quick-chip" id="qa-btn-duration" style="flex:1; justify-content:center;" onclick="setQAType('duration')">⏱️ Duration</button>
+        <input type="hidden" id="qa_type_val" value="instant">
+      </div>
+    </div>
+  </div>
+
+  <div id="panic-wrap"><button class="panic-btn" id="panic-main-btn" onclick="togglePanic()">🚨 Caught in a Fatal Loop?</button></div>
+  <div id="panic-triggers" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-top:12px;">
+    <div class="sec-label" id="lbl-panic-trigger" style="margin-top:0;">What triggered the loop?</div>
+    <div id="panic-chips-flex" style="display: flex; gap: 12px; align-items: center;">
+      <div class="quick-actions-row" id="panic-chips-wrap" style="flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 0;"></div>
+      <div style="flex-shrink: 0; border-left: 1px solid var(--border2); padding-left: 12px;">
+        <button class="quick-chip" onclick="hidePanicTriggers()">Cancel</button>
+      </div>
+    </div>
+    <div id="panic-custom-wrap" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="panic-emoji-input" value="🚨" />
+        <input class="form-input" style="flex:1;" type="text" id="panic-input" placeholder="Custom loop trigger..." onkeydown="if(event.key==='Enter')submitCustomPanic()" />
+        <button class="task-add-btn" style="width: 44px; height: 44px;" onclick="submitCustomPanic()">+</button>
+        <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" onclick="hideCustomPanic()">×</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label" id="tl-label" style="display:none">Timeline</div>
+  <div class="card" id="timeline-wrap" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;display:none"><div id="timeline-list"></div></div>
+</div>
+
+<div class="screen" id="screen-money">
+  <div class="money-hero" id="money-hero-card">
+    <div class="money-label" id="lbl-money-hero" style="font-size:10px; text-transform:uppercase; color:var(--text3);">Spent Today</div>
+    <div class="money-amount" id="money-total">--</div>
+    <div class="money-sub" id="money-left">Calculating...</div>
+  </div>
+  <div class="sec-label" id="lbl-money-add">Add Expense</div>
+  <div class="money-bento-form">
+    <div class="bento-left" id="money-cat-list"></div>
+    <div class="bento-right">
+      <input class="form-input" type="number" id="exp-amount" placeholder="Amount" style="color: var(--teal); font-size: 18px;" />
+      <input class="form-input" type="text" id="exp-note" placeholder="Note..." />
+    </div>
+    <div class="bento-bottom"><button class="add-btn" onclick="addExpense()">Add Expense</button></div>
+  </div>
+  <div class="sec-label" id="lbl-money-dist">Distribution</div>
+  <div class="dist-card" id="dist-graph"></div>
+  <div class="sec-label" id="lbl-money-hist">History</div>
+  <div class="card" id="expense-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;"></div>
+</div>
+
+<div class="screen" id="screen-tasks">
+  <div class="task-stats">
+    <div class="task-stat"><div class="ts-val" id="stat-total">0</div><div class="ts-lbl">Total</div></div>
+    <div class="task-stat"><div class="ts-val" id="stat-done" style="color:var(--teal)">0</div><div class="ts-lbl">Done</div></div>
+    <div class="task-stat"><div class="ts-val" id="stat-left" style="color:var(--amber)">0</div><div class="ts-lbl">Left</div></div>
+  </div>
+  <div class="sec-label" id="lbl-tasks-add">Add task</div>
+  <div class="task-add-row"><input class="task-add-input" type="text" id="task-input" placeholder="To-do..." onkeydown="if(event.key==='Enter')addTask()" /><button class="task-add-btn" onclick="addTask()">+</button></div>
+  <div class="sec-label" id="lbl-tasks-list">Today</div>
+  <div class="card" id="task-list" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;"></div>
+</div>
+
+<div class="screen" id="screen-settings">
+  <div class="sec-label" id="lbl-set-cloud">Account & Cloud</div>
+  <div class="settings-group">
+    <div class="auth-user-pill">
+      <div class="user-avatar" id="user-photo">👤</div>
+      <div><div id="user-name" style="font-size:14px; font-weight:600;">Guest User</div><div id="user-email" style="font-size:11px; color:var(--text3);">Not signed in</div></div>
+    </div>
+    <button class="add-btn" id="login-btn" onclick="handleAuth()">Sign in with Google</button>
+  </div>
+  <div class="sec-label" id="lbl-set-vault">Vault Security (Auto-E2EE)</div>
+  <div class="settings-group">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+      <div id="vault-status-icon" style="font-size: 24px;">🔒</div>
+      <div><div id="vault-status-title" style="font-size: 13px; font-weight: 600;">Vault Locked</div><div id="vault-status-desc" style="font-size: 11px; color: var(--text3);">Sign in to unlock.</div></div>
+    </div>
+  </div>
+  <div class="sec-label" id="lbl-set-adv">Advanced (Backup & UI)</div>
+  <details class="custom-details">
+    <summary class="custom-summary">⚙️ Manage Data & Custom UI</summary>
+    <div class="details-content">
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" onclick="triggerConfigImport()">⬆️ Import UI</button>
+        <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" onclick="exportConfig()">⬇️ Export UI</button>
+      </div>
+      <button class="add-btn" style="background:var(--rb); border:1px solid var(--rbr); color:var(--red); margin-bottom:24px;" onclick="resetConfig()">Reset to Default</button>
+      <input type="file" id="import-config-file" accept=".json" style="display:none;" onchange="handleConfigImport(event)">
+      <div style="display: flex; gap: 8px;">
+        <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" onclick="triggerImport()">⬆️ Import Logs</button>
+        <button class="add-btn" style="flex:1; background:var(--card2); border:1px solid var(--border); color:var(--text);" onclick="exportData()">⬇️ Export Logs</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none;" onchange="handleImport(event)">
+    </div>
+  </details>
+  <div class="sec-label" id="lbl-set-info">App Info</div>
+  <div id="app-version-info" style="font-size:11px; color:var(--text3); padding-bottom: 24px;"></div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchScreen('log',this)"><div class="nav-dot"></div><div class="ico" id="nav-log-ico">📓</div><span id="nav-log-lbl">Log</span></button>
+  <button class="nav-btn" onclick="switchScreen('money',this)"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-money-ico">💰</div><span id="nav-money-lbl">Money</span></button>
+  <button class="nav-btn" onclick="switchScreen('tasks',this)"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-tasks-ico">✅</div><span id="nav-tasks-lbl">Tasks</span></button>
+  <button class="nav-btn" onclick="switchScreen('settings',this)"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-settings-ico">⚙️</div><span id="nav-settings-lbl">Set</span></button>
+</nav>
+
+<!-- Modals -->
+<div id="eod-modal" class="modal-overlay"><div class="modal-card"><div class="modal-title">Wrap Up</div><div id="eod-intention-text" style="font-size: 18px; color: var(--amber); margin-bottom: 24px;"></div><div style="display:flex;gap:12px;"><button class="add-btn" style="background:var(--card2);color:var(--text);" onclick="finishDay(false)">Missed</button><button class="add-btn" onclick="finishDay(true)">Crushed</button></div></div></div>
+<div id="start-day-modal" class="modal-overlay"><div class="modal-card"><div class="modal-title">Morning</div><input type="text" id="new-day-intention" class="form-input" placeholder="Today's Goal..."><div style="display:flex;gap:12px;margin-top:16px"><button class="add-btn" style="background:var(--card2);color:var(--text);" onclick="cancelStartDay()">Cancel</button><button class="add-btn" onclick="confirmStartDay()">Start</button></div></div></div>
+
+<!-- GENERIC OPTIONS MODAL (Flat Composite Options with mode-switching logic) -->
+<div id="options-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title" id="lbl-options-modal" style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Details</div>
+    <div id="options-chips-wrap" style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom: 24px;"></div>
+    
+    <div id="options-custom-wrap" style="display:none; flex-direction: column; gap: 8px; margin-bottom: 24px;">
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input class="form-input" style="width: 50px; text-align: center; flex-shrink: 0;" type="text" id="options-emoji-input" value="📌" />
+        <input class="form-input" style="flex:1;" type="text" id="options-input" placeholder="Option name..." onkeydown="if(event.key==='Enter')submitCustomOption()" />
+        <button class="task-add-btn" style="width: 44px; height: 44px;" onclick="submitCustomOption()">+</button>
+        <button class="task-add-btn" style="width: 44px; height: 44px; background:var(--bg3); color:var(--text3);" onclick="hideCustomOption()">×</button>
+      </div>
+    </div>
+    
+    <!-- Multi-Select Buttons (For Phone, Workout, etc.) -->
+    <div id="options-multi-btns" style="display:flex; gap:12px;">
+      <button class="add-btn" style="background:var(--card2);color:var(--text);" onclick="skipOptionsLog()">Skip</button>
+      <button class="add-btn" onclick="saveOptionsLog()">Save Log</button>
+    </div>
+    
+    <!-- Single-Select Cancel Button (For Instant Actions like Snacks) -->
+    <div id="options-single-btns" style="display:none; gap:12px;">
+      <button class="add-btn" style="background:var(--card2);color:var(--text);" onclick="cancelOptionsModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-msg"></div>
+
+<script>
+const SYSTEM_DEFAULTS = {
+  version: "v9.5 (Flat Composite Options)",
+  defaultCurrency: "₹",
+  guestName: "Guest",
+  guestEmail: "Not signed in",
+  mockUser: { name: "Guru", email: "guru@example.com" }
+};
+
+const DEFAULT_CONFIG = {
+  ui: {
+    topBadge: "Phase 0 · Week 1",
+    topEmoji: "🔥",
+    nav: {
+      log: { label: "Log", icon: "📓" },
+      money: { label: "Money", icon: "💰" },
+      tasks: { label: "Tasks", icon: "✅" },
+      settings: { label: "Set", icon: "⚙️" }
+    },
+    sections: {
+      intention: "Today's One Thing",
+      battery: "Mental Battery",
+      activity: "Log Activity",
+      quick: "Quick Actions",
+      panicTrigger: "What triggered the loop?",
+      timeline: "Timeline",
+      moneyHero: "Spent Today",
+      moneyAdd: "Add Expense",
+      moneyDist: "Distribution",
+      moneyHist: "History",
+      tasksAdd: "Add task",
+      tasksList: "Today",
+      settingsCloud: "Account & Cloud",
+      settingsVault: "Vault Security (Auto-E2EE)",
+      settingsAdv: "Advanced (Backup & UI)",
+      settingsInfo: "App Info",
+      optionsModalStartTitle: "Details before starting:",
+      optionsModalEndTitle: "What were you doing?",
+      optionsModalInstantTitle: "Choose option:"
+    },
+    buttons: { panic: "🚨 Caught in a Fatal Loop?", custom: "+ Custom" }
+  },
+  theme: {
+    bg: "#0D0D0B", bg2: "#141412", bg3: "#1A1A17", card: "#171715", card2: "#1E1E1B", text: "#E6E4DD",
+    amber: "#E8A830", teal: "#2DC98A", red: "#E86060", radius: "12px", dailyBudget: 500, currencySymbol: SYSTEM_DEFAULTS.defaultCurrency
+  },
+  
+  activities: [
+    { id:'wake', emoji:'☀️', label:'Woke Up', type:'instant', color:'var(--teal)', actionText:'☀️ Start Day' },
+    { id:'bath', emoji:'🚿', label:'Bath', type:'duration' },
+    { id:'breakfast',emoji:'🍳', label:'Breakfast', type:'duration' },
+    { id:'commute', emoji:'🚗', label:'Commute', type:'duration', optionsType:'start', optionsKey:'commute' },
+    { id:'walk', emoji:'🚶', label:'Walking', type:'duration' },
+    { id:'office', emoji:'🏢', label:'Office Work', type:'duration' },
+    { id:'lunch', emoji:'🍛', label:'Lunch', type:'duration' },
+    { id:'home', emoji:'🏠', label:'Reached Home', type:'instant' },
+    { id:'workout', emoji:'💪', label:'Workout', type:'duration', optionsType:'end', optionsKey:'workout' },
+    { id:'dinner', emoji:'🥘', label:'Dinner', type:'duration' },
+    { id:'build', emoji:'🔨', label:'Build Window', type:'duration' },
+    { id:'learning',emoji:'📚', label:'Learning', type:'duration' },
+    { id:'read', emoji:'📖', label:'Reading', type:'duration' },
+    { id:'phone', emoji:'📱', label:'Phone', type:'duration', color:'var(--red)', optionsType:'end', optionsKey:'phone' },
+    { id:'sleep', emoji:'🌙', label:'Sleep', type:'instant', color:'var(--blue)', actionText:'🌙 Wrap Up' }
+  ],
+  
+  // COMPOSITE PATTERN: Flat arrays, where an item can be a key to another array!
+  activityOptions: {
+    'commute': ['🚇 Metro', '🚌 Bus', '🚕 Cab', '🚶 Walk'],
+    'workout': ['🏃 Cardio', '🏋️ Weights', '🧘 Yoga', '🏊 Swim'],
+    '🏃 Cardio': ['Treadmill', 'Cycling', 'Running outside'],
+    '🏋️ Weights': ['Upper Body', 'Lower Body', 'Core'],
+    'phone': ['📞 Call', '📸 Insta', '🦸 Comics', '🎵 Spotify', '▶️ YouTube', '💬 WhatsApp', '🌐 Browse', '🎮 Games'],
+    '📸 Insta': ['Feed', 'Reels', 'DMs', 'Explore'],
+    '▶️ YouTube': ['Shorts', 'Long Form', 'Educational'],
+    'snack': ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit']
+  },
+
+  categories: ['🍛 Food', '🚌 Transport', '☕ Chai', '🛒 Shopping', '💊 Health', '🎮 Fun', '📦 Other'],
+  categoryColors: { '🍛 Food': 'var(--amber)', '🚌 Transport': 'var(--blue)', '☕ Chai': 'var(--teal)', '🛒 Shopping': 'var(--pink)', '💊 Health': '#2DC98A', '🎮 Fun': '#E87AAA', '📦 Other': 'var(--text3)' },
+  
+  quickActions: [
+    { id: 'qa_water', emoji: '💧', label: 'Water', type: 'instant' },
+    { id: 'qa_coffee', emoji: '☕', label: 'Coffee', type: 'instant' },
+    { id: 'qa_meds', emoji: '💊', label: 'Meds', type: 'instant' },
+    { id: 'qa_snack', emoji: '🍩', label: 'Snack', type: 'instant', optionsType: 'instant', optionsKey: 'snack' },
+    { id: 'qa_stretch', emoji: '🧘', label: 'Stretch', type: 'duration' },
+    { id: 'qa_sun', emoji: '☀️', label: 'Sunshine', type: 'duration' }
+  ],
+  
+  panicTriggers: ['Procrastination', 'Stress', 'Boredom', 'Tiredness', 'Avoidance', 'Anxiety']
+};
+
+let CURRENT_UI = {}, CURRENT_THEME = {}, APP_BUDGET = 500, APP_CURRENCY = '₹';
+let ACTIVITIES = [], STATIC_CATS = [], CAT_COLORS = {}, PANIC_TRIGGERS = [];
+let ACTIVITY_OPTIONS = {}; 
+
+let timelineItems = [], expenses = [], tasks = [], quickActions = [], userCats = [];
+let activeExpenseCat = '', activeWheelId = 'wake', isAddingCustomCat = false, autoVaultKey = '';
+
+// Options Nav State
+let activeOptionsContext = null; 
+let selectedOptions = new Set();
+let optionsPath = []; // Tracks breadcrumbs for the Composite Pattern navigation
+
+function applyThemeVariables(theme) {
+  const root = document.documentElement;
+  for(let key in theme) {
+    if(key === 'radius') {
+      root.style.setProperty('--r', theme[key]);
+      root.style.setProperty('--rs', (parseInt(theme[key])-4) + 'px');
+    } else {
+      root.style.setProperty('--' + key, theme[key]);
+    }
+  }
+}
+
+function applyUILabels(ui) {
+  const u = { ...DEFAULT_CONFIG.ui, ...ui };
+  document.getElementById('top-badge').textContent = u.topBadge;
+  document.getElementById('top-emoji').textContent = u.topEmoji;
+  for(let key in u.nav) {
+    document.getElementById(`nav-${key}-ico`).textContent = u.nav[key].icon;
+    document.getElementById(`nav-${key}-lbl`).textContent = u.nav[key].label;
+  }
+  for(let key in u.sections) {
+    const el = document.getElementById('lbl-' + key);
+    if(el) el.textContent = u.sections[key];
+  }
+  updatePanicButton();
+}
+
+function loadConfig(configData = null) {
+  let config = configData || JSON.parse(localStorage.getItem('guru_ui_config')) || DEFAULT_CONFIG;
+  CURRENT_UI = config.ui || DEFAULT_CONFIG.ui;
+  CURRENT_THEME = config.theme || DEFAULT_CONFIG.theme;
+  APP_BUDGET = CURRENT_THEME.dailyBudget || 500;
+  APP_CURRENCY = CURRENT_THEME.currencySymbol || '₹';
+  ACTIVITIES = config.activities;
+  STATIC_CATS = config.categories;
+  CAT_COLORS = config.categoryColors;
+  PANIC_TRIGGERS = config.panicTriggers || DEFAULT_CONFIG.panicTriggers;
+  ACTIVITY_OPTIONS = config.activityOptions || DEFAULT_CONFIG.activityOptions;
+  
+  if (quickActions.length === 0) quickActions = [...config.quickActions];
+  activeExpenseCat = STATIC_CATS[0];
+  applyThemeVariables(CURRENT_THEME);
+  applyUILabels(CURRENT_UI);
+  if(configData) localStorage.setItem('guru_ui_config', JSON.stringify(config));
+}
+
+function isValidConfig(data) {
+  if (!data || typeof data !== 'object') return false;
+  if (!Array.isArray(data.activities) || data.activities.length === 0) return false;
+  if (!data.activities[0].id || !data.activities[0].label) return false;
+  if (!Array.isArray(data.categories) || data.categories.length === 0) return false;
+  if (!data.categoryColors || typeof data.categoryColors !== 'object') return false;
+  if (!Array.isArray(data.quickActions)) return false;
+  if (data.panicTriggers && !Array.isArray(data.panicTriggers)) return false;
+  if (data.activityOptions && typeof data.activityOptions !== 'object') return false;
+  return true;
+}
+
+function exportConfig() {
+  const currentConfig = { 
+    ui: CURRENT_UI, theme: CURRENT_THEME, activities: ACTIVITIES, categories: STATIC_CATS, 
+    categoryColors: CAT_COLORS, quickActions: quickActions, panicTriggers: PANIC_TRIGGERS, 
+    activityOptions: ACTIVITY_OPTIONS
+  };
+  const blob = new Blob([JSON.stringify(currentConfig, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `guru_ui_config.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast("UI Config Exported! 🎨");
+}
+
+function triggerConfigImport() { document.getElementById('import-config-file').click(); }
+
+function handleConfigImport(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedConfig = JSON.parse(e.target.result);
+      if (isValidConfig(importedConfig)) {
+        quickActions = importedConfig.quickActions; 
+        loadConfig(importedConfig);
+        renderActivities(); renderMoneyCats(); renderQuickActions(); renderPanicTriggers(); renderExpenses(); saveState(); 
+        showToast("UI Config Applied Successfully! ✨");
+      } else { showToast("Invalid config format! Rolled back to default.", true); loadConfig(DEFAULT_CONFIG); }
+    } catch (error) { showToast("Error parsing file! Rolled back to default.", true); loadConfig(DEFAULT_CONFIG); }
+    event.target.value = ''; 
+  };
+  reader.readAsText(file);
+}
+
+function resetConfig() {
+  loadConfig(DEFAULT_CONFIG); quickActions = [...DEFAULT_CONFIG.quickActions];
+  renderActivities(); renderMoneyCats(); renderQuickActions(); renderPanicTriggers(); renderExpenses(); saveState();
+  showToast("UI Reset to Default ♻️");
+}
+
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast-msg');
+  t.textContent = msg; t.style.background = err ? 'var(--red)' : 'var(--teal)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function switchScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-dot').forEach(d => d.style.opacity = '0');
+  document.getElementById('screen-'+name).classList.add('active');
+  btn.classList.add('active'); btn.querySelector('.nav-dot').style.opacity = '1';
+}
+
+function formatTime(d) { return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+function isLocked(cAt) { return (new Date() - cAt) > 3600000; }
+function getOngoingItem(bId) { return timelineItems.find(t => t.baseId === bId && t.type === 'duration' && !t.endTime); }
+
+function renderActivities() {
+  const wheel = document.getElementById('wheel');
+  const scroll = wheel.scrollLeft;
+  wheel.innerHTML = ACTIVITIES.map(a => `
+    <div class="wheel-item" data-id="${a.id}" data-active="${a.id === activeWheelId}" onclick="handleWheelClick(this, '${a.id}')">
+      ${getOngoingItem(a.id) ? '<div class="wheel-ongoing-dot">•</div>' : ''}
+      <div class="wheel-emoji">${a.emoji}</div>
+      <div class="wheel-label">${a.label}</div>
+      <div class="wheel-hint" id="hint-${a.id}">Tap to log</div>
+    </div>
+  `).join('');
+  wheel.scrollLeft = scroll; updateWheel();
+}
+
+function handleWheelClick(el, id) {
+  if (el.dataset.active === "true") logSelectedActivity();
+  else scrollToItem(el);
+}
+
+function scrollToItem(el) {
+  const wheel = document.getElementById('wheel');
+  wheel.scrollTo({ left: el.offsetLeft + el.offsetWidth/2 - wheel.clientWidth/2, behavior: 'smooth' });
+}
+
+function updateWheel() {
+  const wheel = document.getElementById('wheel'); if(!wheel) return;
+  const items = document.querySelectorAll('.wheel-item'), center = wheel.scrollLeft + wheel.clientWidth/2;
+  let min = Infinity, closest = null;
+  items.forEach(item => {
+    const dist = (item.offsetLeft + item.offsetWidth/2) - center;
+    const norm = Math.max(-1, Math.min(1, dist / (wheel.clientWidth/1.5)));
+    item.style.transform = `translateY(${Math.abs(norm)*25}px) rotate(${norm*30}deg) scale(${1-Math.abs(norm)*0.3})`;
+    item.style.opacity = 1 - Math.abs(norm)*0.7;
+    if(Math.abs(dist) < min) { min = Math.abs(dist); closest = item.dataset.id; }
+  });
+  if(activeWheelId !== closest) {
+    activeWheelId = closest;
+    items.forEach(i => i.dataset.active = (i.dataset.id === closest));
+  }
+  const act = ACTIVITIES.find(a => a.id === activeWheelId);
+  const marker = document.getElementById('dial-marker');
+  if(act && marker) {
+    let color = act.color || "var(--amber)", text = act.actionText || "Tap to log";
+    if(getOngoingItem(act.id)) { color = "var(--red)"; text = "🔴 Tap to Stop"; }
+    marker.style.borderColor = color; marker.style.boxShadow = `0 0 20px ${color}33`;
+    const hint = document.getElementById('hint-'+act.id);
+    if(hint) { hint.textContent = text; hint.style.color = color; }
+  }
+}
+
+function logSelectedActivity() {
+  const act = ACTIVITIES.find(a => a.id === activeWheelId);
+  if(act.id === 'sleep') return showEndDayModal();
+  if(act.id === 'wake') return showStartDayModal(act);
+  
+  const isOngoing = getOngoingItem(act.id);
+
+  if (act.optionsType === 'end' && isOngoing) {
+    showOptionsModal(act, 'end');
+  } else if (act.optionsType === 'start' && !isOngoing) {
+    showOptionsModal(act, 'start');
+  } else {
+    processLogAction(act.id, act.emoji, act.label, act.type);
+  }
+}
+
+function processLogAction(baseId, emoji, label, type, optionalData = {}) {
+  const now = new Date();
+  let finalLabel = label + (optionalData.startSuffix || '');
+
+  if (type === 'duration') {
+    const ongoing = getOngoingItem(baseId);
+    if (ongoing) {
+      ongoing.endTime = now;
+      if (optionalData.suffix) ongoing.label += optionalData.suffix;
+    }
+    else timelineItems.push({ id: 'tl_'+Date.now(), baseId, emoji, label: finalLabel, type, startTime: now, endTime: null, createdAt: now, ...optionalData });
+  } else {
+    timelineItems.push({ id: 'tl_'+Date.now(), baseId, emoji, label: finalLabel, type, startTime: now, createdAt: now, ...optionalData });
+  }
+  renderQuickActions(); renderActivities(); renderTimeline(); saveState();
+}
+
+function renderTimeline() {
+  const list = document.getElementById('timeline-list');
+  if (timelineItems.length === 0) { 
+    document.getElementById('tl-label').style.display='none'; document.getElementById('timeline-wrap').style.display='none'; return; 
+  }
+  
+  document.getElementById('tl-label').style.display='block'; document.getElementById('timeline-wrap').style.display='block';
+  const sorted = [...timelineItems].sort((a,b)=>a.startTime - b.startTime);
+  
+  const activeDurations = []; const itemDepths = new Map();
+  sorted.forEach(item => {
+    for (let i = activeDurations.length - 1; i >= 0; i--) { if (activeDurations[i].endTime && activeDurations[i].endTime <= item.startTime) activeDurations.splice(i, 1); }
+    itemDepths.set(item.id, activeDurations.length);
+    if (item.type === 'duration') activeDurations.push(item);
+  });
+
+  let html = '', lastTime = null;
+  sorted.forEach((item, i) => {
+    const depth = itemDepths.get(item.id);
+    const isNested = depth > 0;
+    if (lastTime && depth === 0) { 
+      const gap = Math.floor((item.startTime - lastTime)/60000); 
+      if (gap >= 30) html += `<div class="timeline-gap"><div class="tl-time" style="visibility:hidden"></div><div class="tl-dot-wrap"><div class="gap-line"></div></div><div class="tl-content"><div class="gap-text">⚠️ ${Math.floor(gap/60)}h ${gap%60}m gap</div></div></div>`; 
+    }
+    
+    const locked = isLocked(item.createdAt), nestedClass = isNested ? 'nested' : '', indentStyle = isNested ? `margin-left: ${depth * 14}px;` : '';
+    html += `<div class="timeline-item ${nestedClass}" style="${indentStyle}">
+      <div class="tl-time ${item.type==='duration'&&!item.endTime?'ongoing':''}">${formatTime(item.startTime)}</div>
+      <div class="tl-dot-wrap"><div class="tl-dot"></div>${i < sorted.length-1?'<div class="tl-line"></div>':''}</div>
+      <div class="tl-content">
+        <div class="tl-label" style="${item.isPanic?'color:var(--red);font-weight:600':''}"><span class="tl-emoji">${item.emoji}</span>${item.label}</div>
+        ${item.type==='duration'&&item.endTime?`<div class="tl-duration">${Math.max(1, Math.round((item.endTime - item.startTime)/60000))} mins • till ${formatTime(item.endTime)}</div>`:''}
+      </div>
+      ${locked ? '<div class="tl-action-icon locked">🔒</div>' : `<div class="tl-action-icon del" onclick="deleteTimelineItem('${item.id}')">×</div>`}
+    </div>`;
+    if (depth === 0) lastTime = (item.type==='duration' && !item.endTime) ? null : (item.endTime || item.startTime);
+  });
+  list.innerHTML = html; updatePanicButton();
+}
+
+function deleteTimelineItem(id) { timelineItems = timelineItems.filter(t => t.id !== id); renderTimeline(); renderActivities(); renderQuickActions(); saveState(); }
+
+// ── INTENT: CONTEXT-AWARE COMPOSITE OPTIONS MODAL ──
+function showOptionsModal(act, mode) {
+  activeOptionsContext = { act, mode, optionsKey: act.optionsKey };
+  selectedOptions.clear();
+  optionsPath = []; // Reset Breadcrumbs
+  
+  const titleEl = document.getElementById('lbl-options-modal');
+  if (mode === 'start') titleEl.textContent = CURRENT_UI.sections.optionsModalStartTitle || "Details before starting:";
+  else if (mode === 'instant') titleEl.textContent = CURRENT_UI.sections.optionsModalInstantTitle || "Choose option:";
+  else titleEl.textContent = CURRENT_UI.sections.optionsModalEndTitle || "What were you doing?";
+  
+  if (mode === 'instant') {
+    document.getElementById('options-multi-btns').style.display = 'none';
+    document.getElementById('options-single-btns').style.display = 'flex';
+  } else {
+    document.getElementById('options-multi-btns').style.display = 'flex';
+    document.getElementById('options-single-btns').style.display = 'none';
+  }
+
+  hideCustomOption(); 
+  renderOptionsChips();
+  document.getElementById('options-modal').style.display='flex';
+}
+
+function renderOptionsChips() {
+  const wrap = document.getElementById('options-chips-wrap');
+  
+  // Composite Pattern: Find current list based on how deep we navigated
+  const currentKey = optionsPath.length > 0 ? optionsPath[optionsPath.length - 1] : activeOptionsContext.optionsKey;
+  const currentList = ACTIVITY_OPTIONS[currentKey] || [];
+  
+  let html = '';
+  
+  // If we navigated into a folder, show a back button
+  if (optionsPath.length > 0) {
+    html += `<button class="quick-chip" style="background:var(--bg3); color:var(--text3); border-color:var(--border);" onclick="optionsGoBack()">🔙 Back</button>`;
+  }
+
+  const prefix = optionsPath.length > 0 ? optionsPath.join(' • ') + ' • ' : '';
+  
+  html += currentList.map(o => {
+    const safeVal = o.replace(/'/g, "\\'");
+    const fullPathVal = prefix + o; // e.g. "📸 Insta • Reels"
+    const safeFullPathVal = fullPathVal.replace(/'/g, "\\'");
+    
+    // Core Composite Logic: Does this option string ALSO exist as a key in the master dictionary?
+    if (ACTIVITY_OPTIONS[o] && Array.isArray(ACTIVITY_OPTIONS[o])) {
+       return `<button class="quick-chip" style="border-color:var(--teal); color:var(--teal);" onclick="enterOptionsFolder('${safeVal}')">${o} ▾</button>`;
+    } else {
+       if (activeOptionsContext.mode === 'instant') {
+         return `<button class="quick-chip" onclick="logInstantOption('${safeFullPathVal}')">${o}</button>`;
+       } else {
+         return `<button class="quick-chip ${selectedOptions.has(fullPathVal)?'active':''}" onclick="toggleOption('${safeFullPathVal}')">${o}</button>`;
+       }
+    }
+  }).join('');
+  
+  html += `<button class="quick-chip" onclick="showCustomOption()">${CURRENT_UI.buttons.custom}</button>`;
+  wrap.innerHTML = html;
+}
+
+function enterOptionsFolder(key) {
+  optionsPath.push(key);
+  renderOptionsChips();
+}
+
+function optionsGoBack() {
+  optionsPath.pop();
+  renderOptionsChips();
+}
+
+function logInstantOption(val) {
+  const { act } = activeOptionsContext;
+  processLogAction(act.id, act.emoji, act.label, act.type, { startSuffix: ` (${val})` });
+  document.getElementById('options-modal').style.display = 'none';
+  activeOptionsContext = null;
+}
+
+function cancelOptionsModal() {
+  document.getElementById('options-modal').style.display = 'none';
+  activeOptionsContext = null;
+}
+
+function toggleOption(val) {
+  if(selectedOptions.has(val)) selectedOptions.delete(val); else selectedOptions.add(val);
+  renderOptionsChips();
+}
+
+function showCustomOption() { document.getElementById('options-chips-wrap').style.display='none'; document.getElementById('options-custom-wrap').style.display='flex'; document.getElementById('options-input').focus(); }
+function hideCustomOption() { document.getElementById('options-chips-wrap').style.display='flex'; document.getElementById('options-custom-wrap').style.display='none'; }
+
+function submitCustomOption() {
+  const v = document.getElementById('options-input').value.trim(), e = document.getElementById('options-emoji-input').value.trim() || '📌';
+  if(!v) return;
+  const entry = `${e} ${v}`;
+  
+  // Custom option gets added to the CURRENT folder we are looking at
+  const currentKey = optionsPath.length > 0 ? optionsPath[optionsPath.length - 1] : activeOptionsContext.optionsKey;
+  
+  if(!ACTIVITY_OPTIONS[currentKey]) ACTIVITY_OPTIONS[currentKey] = [];
+  if(!ACTIVITY_OPTIONS[currentKey].includes(entry)) {
+    ACTIVITY_OPTIONS[currentKey].push(entry);
+    saveState();
+  }
+  
+  const prefix = optionsPath.length > 0 ? optionsPath.join(' • ') + ' • ' : '';
+  const fullPathVal = prefix + entry;
+
+  // Mode Routing
+  if (activeOptionsContext.mode === 'instant') {
+     logInstantOption(fullPathVal);
+     document.getElementById('options-input').value = ''; 
+     document.getElementById('options-emoji-input').value = '📌';
+     return;
+  }
+
+  selectedOptions.add(fullPathVal); 
+  hideCustomOption(); 
+  document.getElementById('options-input').value = ''; 
+  document.getElementById('options-emoji-input').value = '📌';
+  renderOptionsChips();
+}
+
+function skipOptionsLog() {
+  document.getElementById('options-modal').style.display='none';
+  const { act } = activeOptionsContext;
+  processLogAction(act.id, act.emoji, act.label, act.type);
+  activeOptionsContext = null;
+}
+
+function saveOptionsLog() {
+  document.getElementById('options-modal').style.display='none';
+  const { act, mode } = activeOptionsContext;
+  
+  let suffix = '';
+  if (selectedOptions.size > 0) suffix = ` (${Array.from(selectedOptions).join(', ')})`;
+  
+  if (mode === 'start' || mode === 'instant') {
+    processLogAction(act.id, act.emoji, act.label, act.type, { startSuffix: suffix });
+  } else {
+    processLogAction(act.id, act.emoji, act.label, act.type, { suffix: suffix });
+  }
+  activeOptionsContext = null;
+}
+
+function togglePanic() {
+  const ongoing = getOngoingItem('panic');
+  if(ongoing) processLogAction('panic', '🚨', ongoing.label, 'duration');
+  else { document.getElementById('panic-wrap').style.display='none'; document.getElementById('panic-triggers').style.display='block'; renderPanicTriggers(); }
+}
+function hidePanicTriggers() { document.getElementById('panic-wrap').style.display='block'; document.getElementById('panic-triggers').style.display='none'; }
+function renderPanicTriggers() {
+  document.getElementById('panic-chips-wrap').innerHTML = `<button class="quick-chip" onclick="showCustomPanic()">${CURRENT_UI.buttons.custom}</button>` + 
+    PANIC_TRIGGERS.map(t => `<button class="quick-chip" style="color:var(--red)" onclick="logPanic('${t}')">${t}</button>`).join('');
+}
+function showCustomPanic() { document.getElementById('panic-chips-flex').style.display='none'; document.getElementById('panic-custom-wrap').style.display='flex'; }
+function hideCustomPanic() { document.getElementById('panic-chips-flex').style.display='flex'; document.getElementById('panic-custom-wrap').style.display='none'; }
+function submitCustomPanic() {
+  const val = document.getElementById('panic-input').value.trim(), emoji = document.getElementById('panic-emoji-input').value;
+  if(!val) return;
+  const entry = emoji + ' ' + val;
+  if(!PANIC_TRIGGERS.includes(entry)) PANIC_TRIGGERS.unshift(entry);
+  logPanic(entry); hideCustomPanic(); renderPanicTriggers();
+}
+function logPanic(t) { processLogAction('panic', '🚨', 'Loop: '+t, 'duration', {isPanic:true}); hidePanicTriggers(); }
+function updatePanicButton() {
+  const btn = document.getElementById('panic-main-btn'), ongoing = getOngoingItem('panic');
+  if(btn) btn.innerHTML = ongoing ? `🔴 Break ${ongoing.label}` : CURRENT_UI.buttons.panic;
+}
+
+function renderQuickActions() {
+  document.getElementById('qa-scroll-wrap').innerHTML = `<button class="quick-chip" onclick="showCustomQA()">${CURRENT_UI.buttons.custom}</button>` +
+    quickActions.map(q => {
+      const ongoing = getOngoingItem(q.id);
+      // Ensure we route configurable Quick Actions (like Snacks) into the generic modal
+      if (q.optionsKey && !ongoing) {
+        return `<button class="quick-chip" onclick="handleQAOptions('${q.id}')">${q.emoji} ${q.label}</button>`;
+      }
+      return `<button class="quick-chip" style="${ongoing?'color:var(--red)':''}" onclick="processLogAction('${q.id}','${q.emoji}','${q.label}','${q.type}')">${ongoing?'🔴 Stop':q.emoji} ${q.label}</button>`;
+    }).join('');
+}
+
+function handleQAOptions(id) {
+  const qa = quickActions.find(q => q.id === id);
+  if (qa) showOptionsModal(qa, 'instant');
+}
+
+function showCustomQA() { document.getElementById('qa-scroll-wrap').style.display='none'; document.getElementById('qa-input-wrap').style.display='flex'; }
+function hideCustomQA() { document.getElementById('qa-scroll-wrap').style.display='flex'; document.getElementById('qa-input-wrap').style.display='none'; }
+function setQAType(t) { document.getElementById('qa_type_val').value = t; document.getElementById('qa-btn-instant').classList.toggle('active', t==='instant'); document.getElementById('qa-btn-duration').classList.toggle('active', t==='duration'); }
+function submitCustomQA() {
+  const v = document.getElementById('qa-input').value, e = document.getElementById('qa-emoji-input').value, t = document.getElementById('qa_type_val').value;
+  if(!v) return;
+  quickActions.unshift({ id:'qa_'+Date.now(), emoji:e, label:v, type:t });
+  processLogAction('qa_'+Date.now(), e, v, t); hideCustomQA(); renderQuickActions();
+}
+
+function updateBatteryDisplay() {
+  const s = document.getElementById('battery-slider');
+  const v = parseInt(s.value), d = document.getElementById('battery-val-display');
+  let c = 'var(--text)', l = 'Okay';
+  
+  if (v <= 20) { c = 'var(--red)'; l = 'Drained'; } 
+  else if (v <= 40) { c = 'var(--amber)'; l = 'Low'; } 
+  else if (v <= 60) { c = '#D3D04F'; l = 'Okay'; } 
+  else if (v <= 80) { c = 'var(--teal)'; l = 'Good'; } 
+  else { c = 'var(--blue)'; l = 'High'; }
+  
+  d.style.color = c; 
+  d.textContent = `(${l}) 🔋 ${v}%`;
+  s.style.background = `linear-gradient(to right, var(--red) 0%, ${c} ${v}%, var(--bg3) ${v}%)`;
+}
+function registerBattery() { processLogAction('battery','🔋', 'Battery: '+document.getElementById('battery-slider').value+'%','instant'); }
+
+function renderMoneyCats() {
+  const wrap = document.getElementById('money-cat-list');
+  let html = '';
+  if (isAddingCustomCat) {
+    html += `<div style="display:flex; gap:4px; width:100%;"><input type="text" id="custom-cat-emoji" class="form-input" value="📦" style="width:40px; padding:8px 0; text-align:center;"><input type="text" id="custom-cat-input" class="form-input" placeholder="Name..." style="flex:1; padding:8px 10px;" onkeydown="if(event.key==='Enter')submitCustomCat()"></div><div style="display:flex; gap:4px; margin-top:4px;"><button class="quick-chip" style="flex:1; justify-content:center; background:var(--teal); color:#0D0D0B; border:none;" onclick="submitCustomCat()">Add</button><button class="quick-chip" style="flex:1; justify-content:center; background:var(--bg3); color:var(--text3); border:none;" onclick="cancelCustomCat()">Cancel</button></div>`;
+  } else html += `<button class="quick-chip" onclick="startAddingCustomCat()" style="border-color:var(--abr); color:var(--amber); width:100%; justify-content:flex-start;">+ Category</button>`;
+  if (!isAddingCustomCat) html += [...STATIC_CATS, ...userCats].map(c => `<button class="quick-chip ${c === activeExpenseCat ? 'active' : ''}" onclick="selectExpenseCat('${c}')" style="width:100%; justify-content:flex-start;">${c}</button>`).join('');
+  wrap.innerHTML = html; if(isAddingCustomCat) document.getElementById('custom-cat-input').focus();
+}
+function startAddingCustomCat() { isAddingCustomCat = true; renderMoneyCats(); }
+function cancelCustomCat() { isAddingCustomCat = false; renderMoneyCats(); }
+function selectExpenseCat(cat) { activeExpenseCat = cat; renderMoneyCats(); }
+function submitCustomCat() {
+  const val = document.getElementById('custom-cat-input').value.trim(), emoji = document.getElementById('custom-cat-emoji').value.trim() || '📦';
+  if(!val) { isAddingCustomCat = false; renderMoneyCats(); return; }
+  const newCat = `${emoji} ${val}`; userCats.push(newCat); activeExpenseCat = newCat; isAddingCustomCat = false; renderMoneyCats(); saveState();
+}
+function addExpense() {
+  const a = parseFloat(document.getElementById('exp-amount').value), n = document.getElementById('exp-note').value;
+  if(!a) return;
+  expenses.push({ id:'exp_'+Date.now(), amt:a, cat:activeExpenseCat, note:n, time:new Date(), createdAt:new Date() });
+  document.getElementById('exp-amount').value=''; document.getElementById('exp-note').value='';
+  processLogAction('money_spent', '💰', `Spent ${APP_CURRENCY}${a} on ${activeExpenseCat.split(' ')[1] || activeExpenseCat}`, 'instant');
+  renderExpenses(); saveState();
+}
+function deleteExpense(id) {
+  const exp = expenses.find(e => e.id === id); if (exp && isLocked(exp.createdAt)) return;
+  expenses = expenses.filter(e => e.id !== id); renderExpenses(); saveState();
+}
+function renderExpenses() {
+  const total = expenses.reduce((s,e)=>s+e.amt,0), left = APP_BUDGET - total;
+  document.getElementById('money-total').textContent = APP_CURRENCY + total.toLocaleString();
+  document.getElementById('money-hero-card').classList.toggle('over-budget', total > APP_BUDGET);
+  document.getElementById('money-left').textContent = left >= 0 ? `${APP_CURRENCY}${left} left` : `${APP_CURRENCY}${Math.abs(left)} over`;
+  document.getElementById('money-left').style.color = left >= 0 ? 'var(--teal)' : 'var(--red)';
+  document.getElementById('expense-list').innerHTML = [...expenses].reverse().map(e => `<div class="expense-item" style="position:relative; display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--border2)"><div class="exp-cat-dot" style="background:var(--ab); width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">${e.cat.split(' ')[0]}</div><div class="exp-info" style="flex:1;"><div class="exp-cat" style="font-size:13px; font-weight:500;">${e.cat}</div><div class="exp-note" style="font-size:11px; color:var(--text3);">${e.note || ''}</div></div><div style="text-align:right; padding-right:24px"><div class="exp-amount" style="font-family:'DM Mono', monospace; color:var(--teal); font-weight:600;">${APP_CURRENCY}${e.amt.toLocaleString()}</div><div class="exp-time" style="font-size:11px; color:var(--text3);">${formatTime(e.time)}</div></div><div style="position:absolute; right:0; top:50%; transform:translateY(-50%)">${isLocked(e.createdAt) ? '<div class="tl-action-icon locked">🔒</div>' : `<div class="tl-action-icon del" onclick="deleteExpense('${e.id}')">×</div>`}</div></div>`).join('');
+  renderDistribution(total);
+}
+function renderDistribution(total) {
+  const sums = {}; expenses.forEach(e => sums[e.cat] = (sums[e.cat] || 0) + e.amt);
+  document.getElementById('dist-graph').innerHTML = total === 0 ? `<div style="text-align:center; color:var(--text3); font-size:11px;">No entries</div>` : 
+    Object.entries(sums).sort((a,b)=>b[1]-a[1]).map(([cat, amt]) => {
+      const pct = (amt/total*100).toFixed(0), color = CAT_COLORS[cat] || 'var(--text3)';
+      return `<div class="dist-row"><div class="dist-label" style="font-size:12px; min-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cat}</div><div class="dist-bar-wrap"><div class="dist-bar" style="width: ${pct}%; background: ${color}"></div></div><div class="dist-val" style="font-family:DM Mono; font-size:10px; min-width:30px; text-align:right">${pct}%</div></div>`;
+    }).join('');
+}
+
+function addTask() { const inp = document.getElementById('task-input'); if(!inp.value) return; tasks.unshift({ id: Date.now(), text: inp.value, done: false }); inp.value=''; renderTasks(); saveState(); }
+function toggleTask(id) { const t = tasks.find(t=>t.id===id); if(t) t.done = !t.done; renderTasks(); saveState(); }
+function renderTasks() {
+  document.getElementById('stat-total').textContent = tasks.length; document.getElementById('stat-done').textContent = tasks.filter(t=>t.done).length; document.getElementById('stat-left').textContent = tasks.filter(t=>!t.done).length;
+  document.getElementById('task-list').innerHTML = tasks.sort((a,b)=>a.done-b.done).map(t => `<div class="task-item ${t.done?'done':''}" onclick="toggleTask(${t.id})"><div class="task-check"></div><div class="task-text">${t.text}</div></div>`).join('');
+}
+
+function saveState() { 
+  localStorage.setItem('guru_tracker_db', JSON.stringify({ 
+    intention: document.getElementById('daily-intention').value, batteryLevel: document.getElementById('battery-slider').value, 
+    timelineItems, expenses, tasks, quickActions, userCats, panicTriggers: PANIC_TRIGGERS, activityOptions: ACTIVITY_OPTIONS, mockAuthEmail: autoVaultKey ? SYSTEM_DEFAULTS.mockUser.email : null
+  })); 
+}
+
+function loadState() {
+  const s = localStorage.getItem('guru_tracker_db'); if(!s) return; const d = JSON.parse(s);
+  document.getElementById('daily-intention').value = d.intention || ''; document.getElementById('battery-slider').value = d.batteryLevel || 60;
+  timelineItems = (d.timelineItems||[]).map(t => ({ ...t, startTime: new Date(t.startTime), endTime: t.endTime?new Date(t.endTime):null, createdAt: new Date(t.createdAt) }));
+  expenses = (d.expenses||[]).map(e => ({ ...e, time: new Date(e.time), createdAt: new Date(e.createdAt) }));
+  tasks = d.tasks || []; quickActions = d.quickActions || quickActions; userCats = d.userCats || [];
+  PANIC_TRIGGERS = d.panicTriggers || PANIC_TRIGGERS; ACTIVITY_OPTIONS = d.activityOptions || ACTIVITY_OPTIONS;
+  
+  // SANITIZER: Purges old broken object styles from experimental branch. Only allows flat strings.
+  for (let key in ACTIVITY_OPTIONS) {
+    if (Array.isArray(ACTIVITY_OPTIONS[key])) {
+      ACTIVITY_OPTIONS[key] = ACTIVITY_OPTIONS[key].filter(opt => typeof opt === 'string');
+    }
+  }
+
+  if (d.mockAuthEmail) {
+    document.getElementById('header-user-name').textContent = SYSTEM_DEFAULTS.mockUser.name; document.getElementById('user-name').textContent = SYSTEM_DEFAULTS.mockUser.name;
+    document.getElementById('user-email').textContent = d.mockAuthEmail; document.getElementById('login-btn').textContent = "Sign Out"; updateVaultUI(d.mockAuthEmail);
+  }
+}
+
+function handleAuth() {
+  if (document.getElementById('login-btn').textContent === "Sign Out") {
+    document.getElementById('header-user-name').textContent = SYSTEM_DEFAULTS.guestName; document.getElementById('user-name').textContent = SYSTEM_DEFAULTS.guestName; document.getElementById('user-email').textContent = SYSTEM_DEFAULTS.guestEmail; document.getElementById('login-btn').textContent = "Sign in with Google"; autoVaultKey = ''; localStorage.removeItem('guru_auto_vault_key'); updateVaultUI(null); showToast("Signed out successfully");
+  } else {
+    showToast("Authenticating via Google...");
+    setTimeout(() => {
+      document.getElementById('header-user-name').textContent = SYSTEM_DEFAULTS.mockUser.name; document.getElementById('user-name').textContent = SYSTEM_DEFAULTS.mockUser.name; document.getElementById('user-email').textContent = SYSTEM_DEFAULTS.mockUser.email; document.getElementById('login-btn').textContent = "Sign Out";
+      autoVaultKey = btoa(SYSTEM_DEFAULTS.mockUser.email + "_secure_session_salt"); localStorage.setItem('guru_auto_vault_key', autoVaultKey); updateVaultUI(SYSTEM_DEFAULTS.mockUser.email); showToast("Vault Unlocked 🔓");
+    }, 800);
+  }
+  saveState(); renderTimeline();
+}
+
+function updateVaultUI(email) {
+  const icon = document.getElementById('vault-status-icon'), title = document.getElementById('vault-status-title'), desc = document.getElementById('vault-status-desc');
+  if (email) { icon.style.filter = "grayscale(0)"; icon.textContent = "🔓"; title.textContent = "Vault Unlocked"; title.style.color = "var(--teal)"; desc.textContent = "Keys securely linked to " + email; } 
+  else { icon.style.filter = "grayscale(1)"; icon.textContent = "🔒"; title.textContent = "Vault Locked"; title.style.color = "var(--text)"; desc.textContent = "Sign in to automatically unlock."; }
+}
+
+function injectSystemUI() {
+  document.getElementById('app-version-info').innerHTML = `Guru's Life-OS ${SYSTEM_DEFAULTS.version}<br>Data encrypted locally before cloud transit.`;
+  document.getElementById('top-date').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  const hour = new Date().getHours(); document.getElementById('time-greeting').textContent = hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening');
+}
+
+function exportData() {
+  const dataStr = localStorage.getItem('guru_tracker_db'); if (!dataStr) return showToast("No data found to export", true);
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(JSON.parse(dataStr), null, 2)], { type: "application/json" })); a.download = `guru_tracker_backup_${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); showToast("Backup exported successfully! ⬇️");
+}
+
+function triggerImport() { document.getElementById('import-file').click(); }
+function handleImport(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try { const importedData = JSON.parse(e.target.result); if (importedData && (Array.isArray(importedData.timelineItems) || Array.isArray(importedData.expenses))) { localStorage.setItem('guru_tracker_db', JSON.stringify(importedData)); loadState(); renderQuickActions(); renderActivities(); renderMoneyCats(); renderExpenses(); renderTasks(); updateBatteryDisplay(); renderTimeline(); showToast("Data imported successfully! 🚀"); } else showToast("Invalid backup file format.", true); } catch (error) { showToast("Error parsing the file. Invalid JSON.", true); }
+    event.target.value = '';
+  }; reader.readAsText(file);
+}
+
+function showEndDayModal() { document.getElementById('eod-intention-text').textContent = document.getElementById('daily-intention').value; document.getElementById('eod-modal').style.display='flex'; }
+function finishDay(s) { processLogAction('sleep', '🌙', s?'Goal Crushed':'Goal Missed', 'instant'); document.getElementById('eod-modal').style.display='none'; }
+function showStartDayModal(a) { document.getElementById('start-day-modal').style.display='flex'; window.pendingWake = a; }
+function confirmStartDay() { timelineItems=[]; expenses=[]; document.getElementById('daily-intention').value=document.getElementById('new-day-intention').value; processLogAction(window.pendingWake.id, window.pendingWake.emoji, window.pendingWake.label, 'instant'); document.getElementById('start-day-modal').style.display='none'; }
+function cancelStartDay() { document.getElementById('start-day-modal').style.display='none'; }
+
+function init() {
+  autoVaultKey = localStorage.getItem('guru_auto_vault_key') || '';
+  injectSystemUI(); loadConfig(); loadState(); 
+  renderQuickActions(); renderActivities(); renderMoneyCats(); renderExpenses(); renderTasks(); renderPanicTriggers(); updateBatteryDisplay(); renderTimeline();
+  window.addEventListener('resize', updateWheel);
+}
+init();
+</script>
+</body>
+</html>
