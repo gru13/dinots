@@ -9,6 +9,8 @@ let activeOptionsContext: { act: any, mode: 'start'|'end'|'instant', optionsKey:
 let selectedOptions = new Set<string>();
 let optionsPath: string[] = [];
 let pendingWakeActivity: { id: string; emoji: string; label: string; type: 'instant' | 'duration' } | null = null;
+const WHEEL_LOOP_COPIES = 3;
+const QUICK_LOOP_COPIES = 3;
 
 function getBatteryMeta(val: number) {
   if (val <= 20) return { color: 'var(--red)', label: 'Drained' };
@@ -65,7 +67,17 @@ export function initLogScreen() {
 
   // 3. Activity Dial
   const wheel = document.getElementById('wheel');
-  if (wheel) wheel.addEventListener('scroll', () => requestAnimationFrame(updateWheel));
+  if (wheel) {
+    wheel.addEventListener('scroll', () => requestAnimationFrame(() => {
+      normalizeInfiniteWheelScroll(wheel);
+      updateWheel();
+    }));
+    enableHorizontalWheelScroll(wheel);
+  }
+
+  document.getElementById('log-custom-trigger')?.addEventListener('click', () => {
+    showQuickActionCustomInput();
+  });
 
   // 4. State Binding
   events.on(EVENTS.STATE_READY, (state: any) => {
@@ -98,6 +110,15 @@ export function initLogScreen() {
   setupStartSleepModals();
 }
 
+function enableHorizontalWheelScroll(el: HTMLElement) {
+  // Let mouse wheel/trackpad vertical motion move horizontal chip rows naturally.
+  el.addEventListener('wheel', (e: WheelEvent) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    el.scrollBy({ left: e.deltaY, behavior: 'auto' });
+    e.preventDefault();
+  }, { passive: false });
+}
+
 // ═══════════════════════════════════════════════
 // DIAL & BATTERY LOGIC
 // ═══════════════════════════════════════════════
@@ -117,21 +138,41 @@ function updateBatteryDisplay(val: number) {
 function renderActivities() {
   const wheel = document.getElementById('wheel');
   if (!wheel) return;
-  
-  const scroll = wheel.scrollLeft;
-  wheel.innerHTML = CONFIG.activities.map((a: any) => {
-    const isOngoing = STATE.timeline.find(t => t.baseId === a.id && t.type === 'duration' && !t.endTime);
-    return `
-      <div class="wheel-item" data-id="${a.id}" data-active="${a.id === activeWheelId}">
+  const activities = Array.isArray(CONFIG.activities) ? CONFIG.activities : [];
+  if (activities.length === 0) {
+    wheel.innerHTML = '';
+    return;
+  }
+
+  if (!activities.some((a: any) => a.id === activeWheelId)) {
+    activeWheelId = activities[0].id;
+  }
+
+  const allCopies: string[] = [];
+  for (let copy = 0; copy < WHEEL_LOOP_COPIES; copy++) {
+    const copyHtml = activities.map((a: any, idx: number) => {
+      const isOngoing = STATE.timeline.find(t => t.baseId === a.id && t.type === 'duration' && !t.endTime);
+      return `
+      <div class="wheel-item" data-id="${a.id}" data-base-index="${idx}" data-loop-copy="${copy}" data-active="${a.id === activeWheelId}">
         ${isOngoing ? '<div class="wheel-ongoing-dot">•</div>' : ''}
         <div class="wheel-emoji">${a.emoji}</div>
         <div class="wheel-label">${a.label}</div>
-        <div class="wheel-hint" id="hint-${a.id}">Tap to log</div>
+        <div class="wheel-hint" id="hint-${a.id}-${copy}-${idx}">Tap to log</div>
       </div>
     `;
-  }).join('');
-  
-  wheel.scrollLeft = scroll;
+    }).join('');
+    allCopies.push(copyHtml);
+  }
+
+  wheel.innerHTML = allCopies.join('');
+
+  const firstInCopy0 = wheel.querySelector('.wheel-item[data-loop-copy="0"][data-base-index="0"]') as HTMLElement | null;
+  const firstInCopy1 = wheel.querySelector('.wheel-item[data-loop-copy="1"][data-base-index="0"]') as HTMLElement | null;
+  if (firstInCopy0 && firstInCopy1) {
+    wheel.dataset.loopCycleWidth = String(firstInCopy1.offsetLeft - firstInCopy0.offsetLeft);
+  }
+
+  centerWheelOnActive();
   updateWheel();
 
   // Re-attach clicks
@@ -151,6 +192,7 @@ function scrollToItem(el: HTMLElement) {
 function updateWheel() {
   const wheel = document.getElementById('wheel'); 
   if (!wheel) return;
+  normalizeInfiniteWheelScroll(wheel);
   const items = document.querySelectorAll('.wheel-item') as NodeListOf<HTMLElement>;
   const center = wheel.scrollLeft + wheel.clientWidth / 2;
   let min = Infinity;
@@ -179,8 +221,32 @@ function updateWheel() {
     }
     marker.style.borderColor = color; 
     marker.style.boxShadow = `0 0 20px ${color}33`;
-    const hint = document.getElementById('hint-' + act.id);
+    const activeItem = document.querySelector(`.wheel-item[data-active="true"]`) as HTMLElement | null;
+    const hint = activeItem?.querySelector('.wheel-hint') as HTMLElement | null;
     if (hint) { hint.textContent = text; hint.style.color = color; }
+  }
+}
+
+function centerWheelOnActive() {
+  const wheel = document.getElementById('wheel');
+  if (!wheel) return;
+
+  const activeInMiddle = wheel.querySelector(`.wheel-item[data-id="${activeWheelId}"][data-loop-copy="1"]`) as HTMLElement | null;
+  if (!activeInMiddle) return;
+
+  wheel.scrollLeft = activeInMiddle.offsetLeft + activeInMiddle.offsetWidth / 2 - wheel.clientWidth / 2;
+}
+
+function normalizeInfiniteWheelScroll(wheel: HTMLElement) {
+  const cycleWidth = Number(wheel.dataset.loopCycleWidth || 0);
+  if (!Number.isFinite(cycleWidth) || cycleWidth <= 0) return;
+
+  const left = wheel.scrollLeft;
+  const lowerBound = cycleWidth * 0.75;
+  const upperBound = cycleWidth * 2.25;
+  if (left < lowerBound || left > upperBound) {
+    const normalized = ((left % cycleWidth) + cycleWidth) % cycleWidth;
+    wheel.scrollLeft = normalized + cycleWidth;
   }
 }
 
@@ -409,10 +475,12 @@ function saveOptionsLog() {
 function setupQuickActions() {
   const qaWrap = document.getElementById('qa-scroll-wrap');
   if (qaWrap) {
-    // Note: requested by user to put `+ Custom` first.
-    let html = `<button class="quick-chip" id="qa-custom-trigger">+ Custom</button>`;
-    html += CONFIG.quickActions.map((qa: any) => `<button class="quick-chip" data-qa-id="${qa.id}">${qa.emoji} ${qa.label}</button>`).join('');
-    qaWrap.innerHTML = html;
+    enableHorizontalWheelScroll(qaWrap);
+    setupInfiniteQuickActions(qaWrap);
+
+    qaWrap.querySelectorAll('.quick-chip[data-qa-custom]').forEach(chip => {
+      chip.addEventListener('click', () => showQuickActionCustomInput());
+    });
 
     qaWrap.querySelectorAll('.quick-chip[data-qa-id]').forEach(chip => {
       chip.addEventListener('click', () => {
@@ -428,10 +496,6 @@ function setupQuickActions() {
       });
     });
 
-    document.getElementById('qa-custom-trigger')?.addEventListener('click', () => {
-      document.getElementById('qa-input-wrap')!.style.display = 'flex';
-      qaWrap.style.display = 'none';
-    });
     document.getElementById('qa-close-btn')?.addEventListener('click', () => {
       document.getElementById('qa-input-wrap')!.style.display = 'none';
       qaWrap.style.display = 'flex';
@@ -476,6 +540,8 @@ function setupQuickActions() {
 
     const pChipsWrap = document.getElementById('panic-chips-wrap');
     if (pChipsWrap) {
+      enableHorizontalWheelScroll(pChipsWrap);
+
       const renderPanicChips = () => {
         let pHtml = `<button class="quick-chip" id="panic-custom-trigger">+ Custom</button>`;
         pHtml += CONFIG.panicTriggers.map((trig: any) => `<button class="quick-chip" data-panic="${trig}">${trig}</button>`).join('');
@@ -541,6 +607,63 @@ function setupQuickActions() {
       }
     }
   }
+}
+
+function setupInfiniteQuickActions(qaWrap: HTMLElement) {
+  const actions = Array.isArray(CONFIG.quickActions) ? CONFIG.quickActions : [];
+  const copies: string[] = [];
+
+  for (let copy = 0; copy < QUICK_LOOP_COPIES; copy++) {
+    let html = `<button class="quick-chip" data-qa-custom="1" data-qa-loop-copy="${copy}">+ Custom</button>`;
+    html += actions.map((qa: any) => {
+      return `<button class="quick-chip" data-qa-id="${qa.id}" data-qa-loop-copy="${copy}">${qa.emoji} ${qa.label}</button>`;
+    }).join('');
+    copies.push(html);
+  }
+
+  qaWrap.innerHTML = copies.join('');
+
+  const firstCopy0 = qaWrap.querySelector('.quick-chip[data-qa-loop-copy="0"]') as HTMLElement | null;
+  const firstCopy1 = qaWrap.querySelector('.quick-chip[data-qa-loop-copy="1"]') as HTMLElement | null;
+  if (firstCopy0 && firstCopy1) {
+    qaWrap.dataset.loopCycleWidth = String(firstCopy1.offsetLeft - firstCopy0.offsetLeft);
+  }
+
+  if (qaWrap.dataset.quickLoopBound !== '1') {
+    qaWrap.addEventListener('scroll', () => requestAnimationFrame(() => normalizeInfiniteQuickRowScroll(qaWrap)));
+    qaWrap.dataset.quickLoopBound = '1';
+  }
+
+  centerInfiniteQuickRow(qaWrap);
+}
+
+function centerInfiniteQuickRow(qaWrap: HTMLElement) {
+  const cycleWidth = Number(qaWrap.dataset.loopCycleWidth || 0);
+  if (!Number.isFinite(cycleWidth) || cycleWidth <= 0) return;
+  qaWrap.scrollLeft = cycleWidth;
+}
+
+function normalizeInfiniteQuickRowScroll(qaWrap: HTMLElement) {
+  const cycleWidth = Number(qaWrap.dataset.loopCycleWidth || 0);
+  if (!Number.isFinite(cycleWidth) || cycleWidth <= 0) return;
+
+  const left = qaWrap.scrollLeft;
+  const lowerBound = cycleWidth * 0.75;
+  const upperBound = cycleWidth * 2.25;
+  if (left < lowerBound || left > upperBound) {
+    const normalized = ((left % cycleWidth) + cycleWidth) % cycleWidth;
+    qaWrap.scrollLeft = normalized + cycleWidth;
+  }
+}
+
+function showQuickActionCustomInput() {
+  const qaWrap = document.getElementById('qa-scroll-wrap');
+  const inputWrap = document.getElementById('qa-input-wrap');
+  if (!qaWrap || !inputWrap) return;
+
+  inputWrap.style.display = 'flex';
+  qaWrap.style.display = 'none';
+  inputWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ═══════════════════════════════════════════════

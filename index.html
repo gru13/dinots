@@ -16,8 +16,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
   
-  <!-- Styles -->
-  <link rel="stylesheet" href="/src/styles/app.css" />
 </head>
 <body>
 
@@ -61,6 +59,9 @@
     <div class="dial-container">
       <div class="dial-center-marker" id="dial-marker"></div>
       <div class="wheel" id="wheel"></div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-top:-12px; margin-bottom:12px;">
+      <button class="quick-chip" id="log-custom-trigger">+ Custom Log</button>
     </div>
 
     <div class="sec-label" id="lbl-quick">Quick Actions</div>
@@ -148,6 +149,7 @@
     <div class="sec-label" id="lbl-tasks-add">Add task</div>
     <div class="task-add-row">
       <input class="form-input" type="text" id="task-input" placeholder="To-do..." />
+      <input class="form-input" type="date" id="task-date-input" style="max-width: 146px;" />
       <button class="task-add-btn" id="add-task-btn">+</button>
     </div>
     <div class="sec-label" id="lbl-tasks-list">Today</div>
@@ -171,6 +173,136 @@
         <div><div id="vault-status-title" style="font-size: 13px; font-weight: 600;">Vault Locked</div><div id="vault-status-desc" style="font-size: 11px; color: var(--text3);">Sign in to unlock.</div></div>
       </div>
     </div>
+    <div class="sec-label">Budget Settings</div>
+    <div class="settings-group">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input id="settings-budget-input" class="form-input" type="number" min="0" step="1" placeholder="Daily budget" />
+        <button id="settings-budget-save" class="task-add-btn" style="width:auto; min-width:72px; padding: 0 12px; font-size:13px;">Save</button>
+      </div>
+    </div>
+    <details id="task-default-details" class="custom-details">
+      <summary class="custom-summary settings-summary-with-add">
+        <span>✅ Task Defaults by Day</span>
+        <span class="settings-summary-actions">
+          <button id="task-default-toggle-add" type="button" class="settings-summary-add-btn" aria-label="Add task default">+</button>
+        </span>
+      </summary>
+      <div class="details-content">
+        <div id="task-default-add-panel" class="settings-add-panel" style="display:none;">
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input id="task-default-input" class="form-input" type="text" placeholder="Default task..." />
+          </div>
+          <div id="task-default-days" class="quick-actions-row" style="margin-bottom:10px;">
+            <button class="quick-chip" data-weekday="0">Sun</button>
+            <button class="quick-chip" data-weekday="1">Mon</button>
+            <button class="quick-chip" data-weekday="2">Tue</button>
+            <button class="quick-chip" data-weekday="3">Wed</button>
+            <button class="quick-chip" data-weekday="4">Thu</button>
+            <button class="quick-chip" data-weekday="5">Fri</button>
+            <button class="quick-chip" data-weekday="6">Sat</button>
+          </div>
+          <div class="settings-add-actions">
+            <button id="task-default-add-cancel" class="quick-chip settings-add-cancel-btn" type="button">× Cancel</button>
+            <button id="task-default-add" class="quick-chip settings-add-confirm-btn" type="button">Add</button>
+          </div>
+        </div>
+        <div id="task-default-list"></div>
+      </div>
+    </details>
+    <details id="settings-activity-details" class="custom-details">
+      <summary class="custom-summary settings-summary-with-add">
+        <span>📓 Log Items</span>
+        <span class="settings-summary-actions">
+          <button id="settings-activity-toggle-add" type="button" class="settings-summary-add-btn" aria-label="Add log item">+</button>
+        </span>
+      </summary>
+      <div class="details-content">
+        <div id="settings-activity-add-panel" class="settings-add-panel" style="display:none;">
+          <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+            <input id="settings-activity-emoji" class="form-input" style="max-width:68px; text-align:center;" type="text" value="🧩" />
+            <input id="settings-activity-label" class="form-input" type="text" placeholder="New log item..." />
+            <select id="settings-activity-type" class="form-input" style="max-width:110px;">
+              <option value="instant">Instant</option>
+              <option value="duration">Duration</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+            <select id="settings-activity-options-type" class="form-input" style="max-width:170px;">
+              <option value="">No options type</option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+              <option value="instant">instant</option>
+            </select>
+            <input id="settings-activity-options-key" class="form-input" type="text" placeholder="Options key (optional)" />
+          </div>
+          <div class="settings-add-actions">
+            <button id="settings-activity-add-cancel" class="quick-chip settings-add-cancel-btn" type="button">× Cancel</button>
+            <button id="settings-activity-add" class="quick-chip settings-add-confirm-btn" type="button">Add Log Item</button>
+          </div>
+        </div>
+        <div id="settings-activity-list"></div>
+      </div>
+    </details>
+    <details id="settings-quick-details" class="custom-details">
+      <summary class="custom-summary settings-summary-with-add">
+        <span>⚡ Quick Items</span>
+        <span class="settings-summary-actions">
+          <button id="settings-quick-toggle-add" type="button" class="settings-summary-add-btn" aria-label="Add quick item">+</button>
+        </span>
+      </summary>
+      <div class="details-content">
+        <div id="settings-quick-add-panel" class="settings-add-panel" style="display:none;">
+          <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+            <input id="settings-quick-emoji" class="form-input" style="max-width:68px; text-align:center;" type="text" value="⚡" />
+            <input id="settings-quick-label" class="form-input" type="text" placeholder="New quick item..." />
+            <select id="settings-quick-type" class="form-input" style="max-width:110px;">
+              <option value="instant">Instant</option>
+              <option value="duration">Duration</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+            <select id="settings-quick-options-type" class="form-input" style="max-width:170px;">
+              <option value="">No options type</option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+              <option value="instant">instant</option>
+            </select>
+            <input id="settings-quick-options-key" class="form-input" type="text" placeholder="Options key (optional)" />
+          </div>
+          <div class="settings-add-actions">
+            <button id="settings-quick-add-cancel" class="quick-chip settings-add-cancel-btn" type="button">× Cancel</button>
+            <button id="settings-quick-add" class="quick-chip settings-add-confirm-btn" type="button">Add Quick Item</button>
+          </div>
+        </div>
+        <div id="settings-quick-list"></div>
+      </div>
+    </details>
+    <details id="settings-options-details" class="custom-details">
+      <summary class="custom-summary settings-summary-with-add">
+        <span>📌 Options Items</span>
+        <span class="settings-summary-actions">
+          <button id="settings-options-toggle-add" type="button" class="settings-summary-add-btn" aria-label="Add options item">+</button>
+        </span>
+      </summary>
+      <div class="details-content">
+        <div id="settings-options-add-panel" class="settings-add-panel" style="display:none;">
+          <div class="settings-options-add-grid">
+            <input id="settings-options-emoji" class="form-input settings-options-emoji-input" type="text" value="📌" />
+            <input id="settings-options-key" class="form-input" type="text" placeholder="Key (e.g., 'commute')" />
+            <input id="settings-options-label" class="form-input" type="text" placeholder="Label (e.g., 'Commute')" />
+          </div>
+          <div class="settings-options-pick-wrap">
+            <div class="settings-options-pick-label">Pick from Log/Quick keys</div>
+            <div id="settings-options-key-list" class="quick-actions-row settings-options-key-list"></div>
+          </div>
+          <div class="settings-add-actions">
+            <button id="settings-options-add-cancel" class="quick-chip settings-add-cancel-btn" type="button">× Cancel</button>
+            <button id="settings-options-add" class="quick-chip settings-add-confirm-btn" type="button">Add Options Item</button>
+          </div>
+        </div>
+        <div id="settings-options-list"></div>
+      </div>
+    </details>
     <div class="sec-label" id="lbl-set-adv">Advanced (Backup & UI)</div>
     <details class="custom-details">
       <summary class="custom-summary">⚙️ Manage Data & Custom UI</summary>

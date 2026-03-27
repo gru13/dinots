@@ -1,0 +1,42 @@
+@media (max-width: 600px) {
+  .settings-draggable-row {
+    flex-wrap: wrap;
+  }
+
+  .settings-row-main {
+    flex-wrap: wrap;
+  }
+
+  .settings-inline-grid {
+    width: 100%;
+  }
+
+  .settings-inline-grid-compact {
+    grid-template-columns: 56px minmax(110px, 1fr);
+  }
+
+  .settings-inline-grid-expanded,
+  .settings-inline-grid-expanded-quick {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-row-actions {
+    width: 100%;
+  }
+
+  .settings-color-dot {
+    margin-left: auto;
+  }
+
+  .settings-option-subitem {
+    margin-left: 10px;
+  }
+
+  .settings-option-add-sub-row {
+    flex-wrap: wrap;
+  }
+
+  .settings-option-parent-tag {
+    padding-left: 0;
+  }
+}

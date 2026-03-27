@@ -100,6 +100,20 @@ export const DEFAULT_CONFIG = {
     { id: 'qa_sun', emoji: '☀️', label: 'Sunshine', type: 'duration' }
   ],
 
+  optionsItems: [
+    { id: 'opt_commute', key: 'commute', emoji: '🚗', label: 'Commute', values: ['🚇 Metro', '🚌 Bus', '🚕 Cab', '🚶 Walk'] },
+    { id: 'opt_workout', key: 'workout', emoji: '💪', label: 'Workout', values: ['🏃 Cardio', '🏋️ Weights', '🧘 Yoga', '🏊 Swim'] },
+    { id: 'opt_phone', key: 'phone', emoji: '📱', label: 'Phone', values: ['📞 Call', '📸 Insta', '🦸 Comics', '🎵 Spotify', '▶️ YouTube', '💬 WhatsApp', '🌐 Browse', '🎮 Games'] },
+    { id: 'opt_snack', key: 'snack', emoji: '🍩', label: 'Snack', values: ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit'] }
+  ],
+
+  optionsNested: {
+    'commute': {},
+    'workout': { '🏃 Cardio': ['Treadmill', 'Cycling', 'Running outside'], '🏋️ Weights': ['Upper Body', 'Lower Body', 'Core'] },
+    'phone': { '📸 Insta': ['Feed', 'Reels', 'DMs', 'Explore'], '▶️ YouTube': ['Shorts', 'Long Form', 'Educational'] },
+    'snack': {}
+  },
+
   taskDefaultsByWeekday: {
     '0': ['🧹 Weekly reset'],
     '1': ['🗂️ Plan the week'],

@@ -1,0 +1,255 @@
+.settings-summary-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-summary-with-add {
+  justify-content: flex-start;
+}
+
+.settings-summary-actions {
+  margin-left: auto;
+  margin-right: 22px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.settings-summary-add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--abr);
+  background: var(--amber);
+  color: #0D0D0B;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.settings-add-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  background: var(--bg2);
+}
+
+.settings-add-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.settings-add-cancel-btn {
+  background: var(--bg3);
+  border-color: var(--border);
+  color: var(--text2);
+}
+
+.settings-add-confirm-btn {
+  background: var(--ab);
+  border-color: var(--abr);
+  color: var(--amber);
+  font-weight: 700;
+}
+
+.settings-draggable-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  background: var(--card2);
+}
+
+.settings-row-main {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-draggable-row-dragging {
+  opacity: 0.55;
+}
+
+.settings-draggable-row-over {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 1px var(--abr);
+}
+
+.settings-drag-handle {
+  width: 28px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text2);
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.settings-draggable-row[data-act-locked="1"] .settings-drag-handle {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.settings-inline-grid {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-inline-grid-compact {
+  grid-template-columns: 70px minmax(130px, 1fr);
+}
+
+.settings-inline-grid-expanded {
+  grid-template-columns: 1fr;
+}
+
+.settings-inline-grid-expanded-quick {
+  grid-template-columns: 1fr;
+}
+
+.settings-color-field {
+  width: 60px;
+  min-width: 60px;
+  height: 44px;
+  padding: 4px;
+}
+
+.settings-color-field::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.settings-color-field::-webkit-color-swatch {
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+}
+
+.settings-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-edit-panel {
+  border-top: 1px solid var(--border2);
+  padding-top: 10px;
+}
+
+.settings-edit-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-action-btn {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.settings-action-edit {
+  border-color: var(--abr);
+  background: var(--ab);
+  color: var(--amber);
+}
+
+.settings-action-save {
+  border-color: var(--tbr);
+  background: var(--tb);
+  color: var(--teal);
+}
+
+.settings-action-cancel {
+  border-color: var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+}
+
+.settings-action-delete {
+  border-color: rgba(232, 96, 96, 0.28);
+  background: rgba(232, 96, 96, 0.08);
+  color: var(--red);
+}
+
+.settings-action-icon-btn {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.settings-edit-icon {
+  display: inline-block;
+  transform: rotate(135deg);
+}
+
+.settings-sublist-label {
+  margin: 10px 0 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  padding: 0 2px;
+}
+
+.settings-sublist-block {
+  border: 1px dashed var(--border2);
+  border-radius: var(--rs);
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.settings-sublist-empty {
+  padding: 10px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+.settings-edit-panel .form-input {
+  width: 100%;
+  max-width: none !important;
+}
+
+.settings-edit-panel .settings-color-field {
+  width: 100%;
+  min-width: 100%;
+}
+
+.settings-pill-display {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border2);
+  border-radius: var(--rs);
+  background: var(--bg2);
+  color: var(--text);
+  padding: 0 12px;
+}
+
+.settings-pill-emoji {
+  justify-content: center;
+  font-size: 18px;
+}
+
+.settings-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--text3);
+  flex-shrink: 0;
+}

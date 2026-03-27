@@ -1,0 +1,11 @@
+.form-input { width: 100%; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--rs); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px; outline: none; transition: border-color .15s; }
+.form-input:focus { border-color: var(--abr); }
+.form-input::placeholder { color: var(--text3); }
+#settings-budget-input { -moz-appearance: textfield; }
+#settings-budget-input::-webkit-outer-spin-button,
+#settings-budget-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.add-btn { width: 100%; background: var(--teal); border: none; border-radius: var(--rs); color: #0D0D0B; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 14px; cursor: pointer; transition: all .2s; letter-spacing: .02em; box-sizing: border-box; }
+.add-btn:active { opacity: 0.85; }
+
+.battery-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--bg3); outline: none; margin-top: 16px; margin-bottom: 4px; }
+.battery-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--text); cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5); }

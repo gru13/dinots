@@ -1,4 +1,5 @@
 import './config';
+import './styles/app.css';
 import { initAuth, CURRENT_USER, IS_VAULT_OPEN } from './modules/auth';
 
 import { initLogScreen } from './screens/log';

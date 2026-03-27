@@ -1,0 +1,12 @@
+.task-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.task-stat { background: var(--card2); border: 1px solid var(--border); border-radius: var(--rs); padding: 12px; text-align: center; }
+.ts-val { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; color: var(--text); }
+.ts-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+.task-add-row { display: flex; gap: 8px; margin-bottom: 4px; }
+.task-add-btn { width: 44px; height: 44px; background: var(--amber); border: none; border-radius: var(--rs); color: #0D0D0B; font-size: 22px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.task-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border2); cursor: pointer; }
+.task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.task-item.done .task-check { background: var(--teal); border-color: var(--teal); }
+.task-item.done .task-check::after { content: '✓'; color: #0D0D0B; font-size: 11px; font-weight: 700; }
+.task-text { flex: 1; font-size: 14px; color: var(--text); line-height: 1.4; padding-top: 1px; }
+.task-item.done .task-text { color: var(--text3); text-decoration: line-through; }
