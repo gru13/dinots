@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   
   <!-- PWA Setup -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
+  <link rel="apple-touch-icon" href="/icon-192.svg" />
   <meta name="theme-color" content="#E8A830" />
   
   <title>DINOTS - Daily IN Out Tracking System</title>
@@ -19,6 +20,14 @@
   <link rel="stylesheet" href="/src/styles/app.css" />
 </head>
 <body>
+
+  <div id="auth-gate" class="auth-gate" style="display:flex;">
+    <div class="auth-gate-card">
+      <div class="auth-gate-title">Sign in required</div>
+      <div class="auth-gate-subtitle">Please sign in with Google to use DINOTS.</div>
+      <button class="add-btn" id="gate-login-btn">Sign in with Google</button>
+    </div>
+  </div>
 
   <!-- TOP BAR -->
   <div class="top-bar">
@@ -73,11 +82,11 @@
     </div>
 
     <div id="panic-wrap"><button class="panic-btn" id="panic-main-btn">🚨 Caught in a Fatal Loop?</button></div>
-    <div id="panic-triggers" style="display:none; background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-top:12px;">
+    <div id="panic-triggers" class="panic-panel" style="display:none;">
       <div class="sec-label" id="lbl-panic-trigger" style="margin-top:0;">What triggered the loop?</div>
-      <div id="panic-chips-flex" style="display: flex; gap: 12px; align-items: center;">
-        <div class="quick-actions-row" id="panic-chips-wrap" style="flex: 1; min-width: 0; margin-bottom: 0; padding-bottom: 0;"></div>
-        <div style="flex-shrink: 0; border-left: 1px solid var(--border2); padding-left: 12px;">
+      <div id="panic-chips-flex" class="panic-chips-flex">
+        <div class="quick-actions-row panic-chips-wrap" id="panic-chips-wrap"></div>
+        <div class="panic-cancel-wrap">
           <button class="quick-chip" id="panic-cancel-btn">Cancel</button>
         </div>
       </div>
@@ -111,7 +120,17 @@
         <input class="form-input" type="number" id="exp-amount" placeholder="Amount" style="color: var(--teal); font-size: 18px;" />
         <input class="form-input" type="text" id="exp-note" placeholder="Note..." />
       </div>
-      <div class="bento-bottom"><button class="add-btn" id="add-exp-btn">Add Expense</button></div>
+      <div class="bento-bottom">
+        <div id="money-cat-custom-wrap" style="display:none; margin-bottom:10px;">
+          <div style="display:flex; gap:8px; align-items:center; width:100%;">
+            <input class="form-input" style="width:50px; text-align:center; flex-shrink:0;" type="text" id="money-cat-emoji-input" value="🏷️" />
+            <input class="form-input" style="flex:1;" type="text" id="money-cat-input" placeholder="Custom category..." />
+            <button class="task-add-btn" style="width:44px; height:44px;" id="money-cat-submit-btn">+</button>
+            <button class="task-add-btn" style="width:44px; height:44px; background:var(--bg3); color:var(--text3);" id="money-cat-close-btn">×</button>
+          </div>
+        </div>
+        <button class="add-btn" id="add-exp-btn">Add Expense</button>
+      </div>
     </div>
     <div class="sec-label" id="lbl-money-dist">Distribution</div>
     <div class="dist-card" id="dist-graph"></div>

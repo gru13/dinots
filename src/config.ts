@@ -1,7 +1,5 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -101,6 +99,18 @@ export const DEFAULT_CONFIG = {
     { id: 'qa_stretch', emoji: '🧘', label: 'Stretch', type: 'duration' },
     { id: 'qa_sun', emoji: '☀️', label: 'Sunshine', type: 'duration' }
   ],
+
+  taskDefaultsByWeekday: {
+    '0': ['🧹 Weekly reset'],
+    '1': ['🗂️ Plan the week'],
+    '2': ['💧 Hydrate check'],
+    '3': ['📚 Learn 30 mins'],
+    '4': ['🏃 Move body'],
+    '5': ['🧾 Review spend'],
+    '6': ['🧠 Weekly reflection']
+  },
+
+  scheduledTasks: [],
   
-  panicTriggers: ['Procrastination', 'Stress', 'Boredom', 'Tiredness', 'Avoidance', 'Anxiety']
+  panicTriggers: ['😵 Procrastination', '😰 Stress', '🥱 Boredom', '😴 Tiredness', '🙈 Avoidance', '🫨 Anxiety']
 };

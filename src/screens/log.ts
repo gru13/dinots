@@ -1,4 +1,4 @@
-import { addTimelineLog, setIntention, setBattery, deleteTimelineLog, STATE, TimelineItem, CONFIG, addCustomActivityOption, addCustomQuickAction } from '../modules/state';
+import { addTimelineLog, setIntention, setBattery, deleteTimelineLog, STATE, TimelineItem, CONFIG, addCustomActivityOption, addCustomQuickAction, addCustomPanicTrigger, resetForStartDay } from '../modules/state';
 import { events, EVENTS } from '../modules/events';
 
 // ---------- INTERNAL APP LOGIC ----------
@@ -8,19 +8,59 @@ let activeWheelId = 'wake';
 let activeOptionsContext: { act: any, mode: 'start'|'end'|'instant', optionsKey: string } | null = null;
 let selectedOptions = new Set<string>();
 let optionsPath: string[] = [];
+let pendingWakeActivity: { id: string; emoji: string; label: string; type: 'instant' | 'duration' } | null = null;
+
+function getBatteryMeta(val: number) {
+  if (val <= 20) return { color: 'var(--red)', label: 'Drained' };
+  if (val <= 40) return { color: 'var(--amber)', label: 'Low' };
+  if (val <= 60) return { color: '#D3D04F', label: 'Okay' };
+  if (val <= 80) return { color: 'var(--teal)', label: 'Good' };
+  return { color: 'var(--blue)', label: 'High' };
+}
 
 export function initLogScreen() {
   console.log('[SCREENS] Hooking up Log Screen interactions...');
 
   // 1. Intention Input
   const intInput = document.getElementById('daily-intention') as HTMLInputElement;
-  if (intInput) intInput.addEventListener('change', e => setIntention((e.target as HTMLInputElement).value));
+  if (intInput) {
+    intInput.addEventListener('input', e => setIntention((e.target as HTMLInputElement).value));
+    intInput.addEventListener('change', e => setIntention((e.target as HTMLInputElement).value));
+  }
 
   // 2. Battery Slider
   const batSlider = document.getElementById('battery-slider') as HTMLInputElement;
   if (batSlider) {
-    batSlider.addEventListener('change', e => setBattery(parseInt((e.target as HTMLInputElement).value)));
-    batSlider.addEventListener('input', e => updateBatteryDisplay(parseInt((e.target as HTMLInputElement).value)));
+    let lastCommittedBattery = Number.isFinite(STATE.battery) ? STATE.battery : 60;
+
+    const applyBattery = (val: number, logEntry: boolean) => {
+      updateBatteryDisplay(val);
+      setBattery(val);
+
+      // Log only when user commits a changed value to avoid timeline spam while dragging.
+      if (logEntry && val !== lastCommittedBattery) {
+        const meta = getBatteryMeta(val);
+        addTimelineLog('battery', '🔋', `Battery ${meta.label}: ${val}%`, 'instant');
+        lastCommittedBattery = val;
+      }
+    };
+
+    const onBatteryInput = (e: Event) => {
+      const val = parseInt((e.target as HTMLInputElement).value);
+      if (Number.isFinite(val)) applyBattery(val, false);
+    };
+
+    const onBatteryChange = (e: Event) => {
+      const val = parseInt((e.target as HTMLInputElement).value);
+      if (Number.isFinite(val)) applyBattery(val, true);
+    };
+
+    batSlider.addEventListener('input', onBatteryInput);
+    batSlider.addEventListener('change', onBatteryChange);
+
+    events.on(EVENTS.STATE_READY, (state: any) => {
+      lastCommittedBattery = state.battery || 60;
+    });
   }
 
   // 3. Activity Dial
@@ -55,6 +95,7 @@ export function initLogScreen() {
   renderTimeline();
   setupQuickActions();
   setupOptionsModal();
+  setupStartSleepModals();
 }
 
 // ═══════════════════════════════════════════════
@@ -66,16 +107,11 @@ function updateBatteryDisplay(val: number) {
   const slider = document.getElementById('battery-slider');
   if (!display || !slider) return;
 
-  let c = 'var(--text)', l = 'Okay';
-  if (val <= 20) { c = 'var(--red)'; l = 'Drained'; } 
-  else if (val <= 40) { c = 'var(--amber)'; l = 'Low'; } 
-  else if (val <= 60) { c = '#D3D04F'; l = 'Okay'; } 
-  else if (val <= 80) { c = 'var(--teal)'; l = 'Good'; } 
-  else { c = 'var(--blue)'; l = 'High'; }
+  const meta = getBatteryMeta(val);
 
-  display.style.color = c; 
-  display.textContent = `(${l}) 🔋 ${val}%`;
-  slider.style.background = `linear-gradient(to right, var(--red) 0%, ${c} ${val}%, var(--bg3) ${val}%)`;
+  display.style.color = meta.color; 
+  display.textContent = `(${meta.label}) 🔋 ${val}%`;
+  slider.style.background = `linear-gradient(to right, var(--red) 0%, ${meta.color} ${val}%, var(--bg3) ${val}%)`;
 }
 
 function renderActivities() {
@@ -101,7 +137,6 @@ function renderActivities() {
   // Re-attach clicks
   document.querySelectorAll('.wheel-item').forEach(el => {
     el.addEventListener('click', () => {
-      const id = el.getAttribute('data-id');
       if (el.getAttribute('data-active') === "true") logSelectedActivity();
       else scrollToItem(el as HTMLElement);
     });
@@ -118,7 +153,8 @@ function updateWheel() {
   if (!wheel) return;
   const items = document.querySelectorAll('.wheel-item') as NodeListOf<HTMLElement>;
   const center = wheel.scrollLeft + wheel.clientWidth / 2;
-  let min = Infinity, closest = null;
+  let min = Infinity;
+  let closest: string | null = null;
 
   items.forEach(item => {
     const dist = (item.offsetLeft + item.offsetWidth / 2) - center;
@@ -152,6 +188,16 @@ function logSelectedActivity() {
   const act = CONFIG.activities.find((a: any) => a.id === activeWheelId);
   if (!act) return;
 
+  // Special flow from stater: wake starts a fresh day modal, sleep triggers wrap-up modal.
+  if (act.id === 'sleep') {
+    showEndDayModal();
+    return;
+  }
+  if (act.id === 'wake') {
+    showStartDayModal(act);
+    return;
+  }
+
   const isOngoing = STATE.timeline.find(t => t.baseId === act.id && t.type === 'duration' && !t.endTime);
 
   if (act.optionsType === 'end' && isOngoing) {
@@ -163,6 +209,57 @@ function logSelectedActivity() {
   } else {
     addTimelineLog(act.id, act.emoji, act.label, act.type as any);
   }
+}
+
+function setupStartSleepModals() {
+  document.getElementById('btn-eod-missed')?.addEventListener('click', () => finishDay(false));
+  document.getElementById('btn-eod-crushed')?.addEventListener('click', () => finishDay(true));
+  document.getElementById('btn-sd-cancel')?.addEventListener('click', cancelStartDay);
+  document.getElementById('btn-sd-start')?.addEventListener('click', confirmStartDay);
+}
+
+function showEndDayModal() {
+  const intention = (document.getElementById('daily-intention') as HTMLInputElement | null)?.value?.trim() || 'No One Thing set';
+  const text = document.getElementById('eod-intention-text');
+  const modal = document.getElementById('eod-modal');
+  if (text) text.textContent = intention;
+  if (modal) modal.style.display = 'flex';
+}
+
+function finishDay(crushed: boolean) {
+  addTimelineLog('sleep', '🌙', crushed ? 'Goal Crushed' : 'Goal Missed', 'instant');
+  const modal = document.getElementById('eod-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function showStartDayModal(act: any) {
+  pendingWakeActivity = { id: act.id, emoji: act.emoji, label: act.label, type: act.type as 'instant' | 'duration' };
+  const goalInput = document.getElementById('new-day-intention') as HTMLInputElement | null;
+  const currentIntention = (document.getElementById('daily-intention') as HTMLInputElement | null)?.value || '';
+  if (goalInput) goalInput.value = currentIntention;
+  const modal = document.getElementById('start-day-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function confirmStartDay() {
+  if (!pendingWakeActivity) return;
+
+  const goalInput = document.getElementById('new-day-intention') as HTMLInputElement | null;
+  const newIntention = goalInput?.value?.trim() || '';
+
+  resetForStartDay(newIntention);
+  addTimelineLog(pendingWakeActivity.id, pendingWakeActivity.emoji, pendingWakeActivity.label, pendingWakeActivity.type);
+
+  if (goalInput) goalInput.value = '';
+  const modal = document.getElementById('start-day-modal');
+  if (modal) modal.style.display = 'none';
+  pendingWakeActivity = null;
+}
+
+function cancelStartDay() {
+  const modal = document.getElementById('start-day-modal');
+  if (modal) modal.style.display = 'none';
+  pendingWakeActivity = null;
 }
 
 // ═══════════════════════════════════════════════
@@ -240,7 +337,7 @@ function renderOptionsChips() {
   wrap.querySelectorAll('[data-options-action="back"]').forEach(e => e.addEventListener('click', () => {
     optionsPath.pop(); renderOptionsChips();
   }));
-  wrap.querySelectorAll('[data-options-folder]').forEach(e => e.addEventListener('click', (el) => {
+  wrap.querySelectorAll('[data-options-folder]').forEach(e => e.addEventListener('click', () => {
     optionsPath.push(e.getAttribute('data-options-folder')!); renderOptionsChips();
   }));
   wrap.querySelectorAll('[data-options-instant]').forEach(e => e.addEventListener('click', () => {
@@ -298,9 +395,10 @@ function skipOptionsLog() {
 function saveOptionsLog() {
   if (!activeOptionsContext) return;
   const act = activeOptionsContext.act;
-  const suffix = selectedOptions.size > 0 ? ` (${Array.from(selectedOptions).join(', ')})` : '';
+  const suffix = selectedOptions.size > 0 ? ` (${Array.from(selectedOptions).join(' • ')})` : '';
   addTimelineLog(act.id, act.emoji, act.label + suffix, act.type);
   document.getElementById('options-modal')!.style.display = 'none';
+  activeOptionsContext = null;
 }
 
 
@@ -367,23 +465,80 @@ function setupQuickActions() {
   const panicWrap = document.getElementById('panic-triggers');
   if (panicBtn && panicWrap) {
     panicBtn.addEventListener('click', () => { panicWrap.style.display = 'block'; panicBtn.style.display = 'none'; });
-    document.getElementById('panic-cancel-btn')?.addEventListener('click', () => { panicWrap.style.display = 'none'; panicBtn.style.display = 'block'; });
+    document.getElementById('panic-cancel-btn')?.addEventListener('click', () => {
+      panicWrap.style.display = 'none';
+      panicBtn.style.display = 'block';
+      const customWrap = document.getElementById('panic-custom-wrap');
+      const input = document.getElementById('panic-input') as HTMLInputElement | null;
+      if (customWrap) customWrap.style.display = 'none';
+      if (input) input.value = '';
+    });
 
     const pChipsWrap = document.getElementById('panic-chips-wrap');
     if (pChipsWrap) {
-      let pHtml = `<button class="quick-chip" id="panic-custom-trigger">+ Custom</button>`;
-      pHtml += CONFIG.panicTriggers.map((trig: any) => `<button class="quick-chip" data-panic="${trig}">${trig}</button>`).join('');
-      pChipsWrap.innerHTML = pHtml;
+      const renderPanicChips = () => {
+        let pHtml = `<button class="quick-chip" id="panic-custom-trigger">+ Custom</button>`;
+        pHtml += CONFIG.panicTriggers.map((trig: any) => `<button class="quick-chip" data-panic="${trig}">${trig}</button>`).join('');
+        pChipsWrap.innerHTML = pHtml;
 
-      pChipsWrap.querySelectorAll('[data-panic]').forEach(chip => {
-        chip.addEventListener('click', () => {
-          const val = chip.getAttribute('data-panic')!;
-          addTimelineLog('panic', '🚨', `Fatal Loop: ${val}`, 'duration', true);
-          panicWrap.style.display = 'none'; panicBtn.style.display = 'block';
-          panicBtn.textContent = "🔴 Stop Loop (Ongoing)";
+        pChipsWrap.querySelectorAll('[data-panic]').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const val = chip.getAttribute('data-panic')!;
+            addTimelineLog('panic', '🚨', `Fatal Loop: ${val}`, 'instant', true);
+            panicWrap.style.display = 'none';
+            panicBtn.style.display = 'block';
+            panicBtn.textContent = CONFIG.ui.buttons.panic;
+            hideCustomPanic();
+          });
         });
-      });
-      // TODO: Custom Panic Modal Mutator
+
+        document.getElementById('panic-custom-trigger')?.addEventListener('click', showCustomPanic);
+      };
+
+      const showCustomPanic = () => {
+        const customWrap = document.getElementById('panic-custom-wrap');
+        if (customWrap) customWrap.style.display = 'flex';
+      };
+
+      const hideCustomPanic = () => {
+        const customWrap = document.getElementById('panic-custom-wrap');
+        const input = document.getElementById('panic-input') as HTMLInputElement | null;
+        if (customWrap) customWrap.style.display = 'none';
+        if (input) input.value = '';
+      };
+
+      const submitCustomPanic = () => {
+        const emojiIn = document.getElementById('panic-emoji-input') as HTMLInputElement | null;
+        const input = document.getElementById('panic-input') as HTMLInputElement | null;
+        const label = input?.value.trim() || '';
+        if (!label) return;
+
+        const emoji = (emojiIn?.value || '').trim();
+        const triggerText = `${emoji}${emoji ? ' ' : ''}${label}`;
+
+        addCustomPanicTrigger(triggerText);
+        addTimelineLog('panic', '🚨', `Fatal Loop: ${triggerText}`, 'instant', true);
+
+        panicWrap.style.display = 'none';
+        panicBtn.style.display = 'block';
+        panicBtn.textContent = CONFIG.ui.buttons.panic;
+        hideCustomPanic();
+        renderPanicChips();
+      };
+
+      renderPanicChips();
+
+      const submitBtn = document.getElementById('panic-submit-btn');
+      const closeBtn = document.getElementById('panic-close-btn');
+      const input = document.getElementById('panic-input') as HTMLInputElement | null;
+
+      if (submitBtn) submitBtn.onclick = submitCustomPanic;
+      if (closeBtn) closeBtn.onclick = hideCustomPanic;
+      if (input) {
+        input.onkeydown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter') submitCustomPanic();
+        };
+      }
     }
   }
 }
@@ -436,7 +591,7 @@ function renderTimeline() {
       <div class="tl-time ${(item.type === 'duration' && !item.endTime) ? 'ongoing' : ''}">${formatTime(item.startTime)}</div>
       <div class="tl-dot-wrap"><div class="tl-dot"></div>${i < sorted.length - 1 ? '<div class="tl-line"></div>' : ''}</div>
       <div class="tl-content">
-        <div class="tl-label" style="${item.isPanic ? 'color:var(--red);font-weight:600' : ''}"><span class="tl-emoji">${item.emoji}</span>${item.label}</div>
+        <div class="tl-label"><span class="tl-emoji">${item.emoji}</span>${item.label}</div>
         ${durHtml}
       </div>
       ${locked ? '<div class="tl-action-icon locked">🔒</div>' : `<div class="tl-action-icon del" data-tl-del="${item.id}">×</div>`}

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="116" fill="#0D0D0B"/>
+
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="135%" y2="135%">
+      <stop offset="0%" stop-color="#2A2A26" />
+      <stop offset="100%" stop-color="#0D0D0B" />
+    </linearGradient>
+    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFC552" />
+      <stop offset="100%" stop-color="#D4931C" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="16" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="16" y="16" width="480" height="480" rx="100" fill="url(#bgGrad)"/>
+  <rect x="16" y="16" width="480" height="480" rx="100" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="4"/>
+  <rect x="40" y="160" width="100" height="192" rx="28" fill="#1A1A17" stroke="#ffffff" stroke-opacity="0.05" stroke-width="4" opacity="0.6"/>
+  <rect x="372" y="160" width="100" height="192" rx="28" fill="#1A1A17" stroke="#ffffff" stroke-opacity="0.05" stroke-width="4" opacity="0.6"/>
+  <rect x="156" y="112" width="200" height="288" rx="36" fill="none" stroke="#E8A830" stroke-width="12" opacity="0.3" filter="url(#glow)"/>
+  <rect x="156" y="112" width="200" height="288" rx="36" fill="#1E1E1B" stroke="url(#amberGrad)" stroke-width="6" />
+  <circle cx="316" cy="152" r="14" fill="#E86060" />
+  <path d="M256 180 L268 232 L320 244 L268 256 L256 308 L244 256 L192 244 L244 232 Z" fill="#E6E4DD"/>
+  <rect x="224" y="340" width="64" height="8" rx="4" fill="#E8A830" opacity="0.8" />
+</svg>

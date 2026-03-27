@@ -1,7 +1,11 @@
 import './config';
-import { initAuth } from './modules/auth';
+import { initAuth, CURRENT_USER, IS_VAULT_OPEN } from './modules/auth';
 
 import { initLogScreen } from './screens/log';
+import { initMoneyScreen } from './screens/money';
+import { initTasksScreen } from './screens/tasks';
+import { initSettingsScreen } from './screens/settings';
+import { bootstrapConfig, bootstrapToday, resetToTodayLocal, _getTodayStr } from './modules/state';
 
 console.log('DINOTS initialized. Bootstrapping modules...');
 
@@ -16,11 +20,35 @@ function updateTopDate() {
 updateTopDate();
 setInterval(updateTopDate, 60000);
 
+let lastSeenDate = _getTodayStr();
+
+function handleDayRollover() {
+  const today = _getTodayStr();
+  if (today === lastSeenDate) return;
+
+  lastSeenDate = today;
+  console.log(`[MAIN] Day rollover detected: ${today}`);
+
+  if (CURRENT_USER && IS_VAULT_OPEN) {
+    bootstrapToday();
+  } else {
+    resetToTodayLocal();
+  }
+}
+
+setInterval(handleDayRollover, 60000);
+
 // 1. Initialize Authentication (This handles the login button and vault unlocking)
 initAuth();
 
 // 2. Initialize Core UI Interactors
 initLogScreen();
+initMoneyScreen();
+initTasksScreen();
+initSettingsScreen();
+
+// 3. Apply default theme/labels immediately for guests (auth bootstraps cloud config on sign-in)
+bootstrapConfig();
 
 // Next steps: Init State, DB, and UI modules...
 
@@ -29,7 +57,7 @@ const navBtns = document.querySelectorAll('.nav-btn');
 const screens = document.querySelectorAll('.screen');
 
 navBtns.forEach(btn => {
-  btn.addEventListener('click', (e) => {
+  btn.addEventListener('click', () => {
     const target = btn.getAttribute('data-target');
     
     // Reset all tabs

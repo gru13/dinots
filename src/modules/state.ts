@@ -10,6 +10,52 @@ const APP_VERSION = 'v1.0.0-beta';
 
 export let CONFIG: any = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
+function normalizePanicTriggers(triggerList: any): { triggers: string[]; changed: boolean } {
+  const fallback = ['😵 Procrastination', '😰 Stress', '🥱 Boredom', '😴 Tiredness', '🙈 Avoidance', '🫨 Anxiety'];
+  if (!Array.isArray(triggerList) || triggerList.length === 0) {
+    return { triggers: fallback, changed: true };
+  }
+
+  const emojiMap: Record<string, string> = {
+    procrastination: '😵 Procrastination',
+    stress: '😰 Stress',
+    boredom: '🥱 Boredom',
+    tiredness: '😴 Tiredness',
+    avoidance: '🙈 Avoidance',
+    anxiety: '🫨 Anxiety'
+  };
+
+  let changed = false;
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  triggerList.forEach((entry: any) => {
+    if (typeof entry !== 'string') return;
+    const trimmed = entry.trim();
+    if (!trimmed) return;
+
+    // Remove leading emoji/symbols so legacy and emoji labels dedupe together.
+    const plain = trimmed.replace(/^[^A-Za-z]+\s*/u, '').trim();
+    const key = plain.toLowerCase();
+    const mapped = emojiMap[key] || trimmed;
+    const dedupeKey = mapped.toLowerCase();
+
+    if (mapped !== trimmed) changed = true;
+    if (!seen.has(dedupeKey)) {
+      seen.add(dedupeKey);
+      normalized.push(mapped);
+    } else {
+      changed = true;
+    }
+  });
+
+  if (normalized.length === 0) {
+    return { triggers: fallback, changed: true };
+  }
+
+  return { triggers: normalized, changed };
+}
+
 function applyThemeVariables(theme: any) {
   if (!theme) return;
   for (const key in theme) {
@@ -21,12 +67,22 @@ function applyThemeVariables(theme: any) {
 export async function bootstrapConfig() {
   try {
     const cloudConfig = await loadConfig();
+    let configChanged = false;
+
     if (cloudConfig) {
       CONFIG = { ...CONFIG, ...cloudConfig };
       console.log('[STATE] Merged remote User Config.');
     } else {
       console.log('[STATE] No remote config found. Using defaults.');
-      // Save default config initially so the file is created
+      configChanged = true;
+    }
+
+    const normalized = normalizePanicTriggers(CONFIG.panicTriggers);
+    CONFIG.panicTriggers = normalized.triggers;
+    if (normalized.changed) configChanged = true;
+
+    if (configChanged) {
+      // Save normalized/default config so cloud config is always consistent.
       saveConfig(CONFIG);
     }
   } catch (err) {
@@ -52,6 +108,46 @@ export function addCustomActivityOption(optionsKey: string, text: string) {
   CONFIG.activityOptions[optionsKey].unshift(text);
   events.emit(EVENTS.CONFIG_UPDATED);
   saveConfig(CONFIG);
+}
+
+export function addCustomPanicTrigger(text: string) {
+  if (!text) return;
+  if (!Array.isArray(CONFIG.panicTriggers)) {
+    CONFIG.panicTriggers = [];
+  }
+
+  const exists = CONFIG.panicTriggers.some((t: string) => t.toLowerCase() === text.toLowerCase());
+  if (!exists) {
+    CONFIG.panicTriggers.unshift(text);
+    events.emit(EVENTS.CONFIG_UPDATED);
+    saveConfig(CONFIG);
+  }
+}
+
+export function addCustomCategory(text: string, color: string = 'var(--amber)'): string {
+  const category = (text || '').trim();
+  if (!category) return '';
+
+  if (!Array.isArray(CONFIG.categories)) {
+    CONFIG.categories = [];
+  }
+  if (!CONFIG.categoryColors || typeof CONFIG.categoryColors !== 'object') {
+    CONFIG.categoryColors = {};
+  }
+
+  const existing = CONFIG.categories.find((c: string) => c.toLowerCase() === category.toLowerCase());
+  const finalCategory = existing || category;
+
+  if (!existing) {
+    CONFIG.categories.unshift(finalCategory);
+  }
+  if (!CONFIG.categoryColors[finalCategory]) {
+    CONFIG.categoryColors[finalCategory] = color;
+  }
+
+  events.emit(EVENTS.CONFIG_UPDATED);
+  saveConfig(CONFIG);
+  return finalCategory;
 }
 
 export interface TimelineItem {
@@ -105,6 +201,18 @@ export let STATE: DailyState = {
   v: APP_VERSION
 };
 
+function _createEmptyState(date: string): DailyState {
+  return {
+    date,
+    intention: '',
+    battery: 60,
+    timeline: [],
+    expenses: [],
+    tasks: [],
+    v: APP_VERSION
+  };
+}
+
 // ═══════════════════════════════════════════════
 // LIFECYCLE & SYNC ACTIONS
 // ═══════════════════════════════════════════════
@@ -120,7 +228,7 @@ export async function bootstrapToday() {
       STATE = { ...STATE, ...cloudState, date: todayStr };
     } else {
       // First sign in today. Reset state to blank template.
-      STATE = { date: todayStr, intention: '', battery: 60, timeline: [], expenses: [], tasks: [], v: APP_VERSION };
+      STATE = _createEmptyState(todayStr);
     }
 
     events.emit(EVENTS.STATE_READY, STATE);
@@ -131,6 +239,15 @@ export async function bootstrapToday() {
   } catch (err) {
     console.error(`[STATE] Failed to bootstrap today:`, err);
   }
+}
+
+export function resetToTodayLocal() {
+  const todayStr = _getTodayStr();
+  STATE = _createEmptyState(todayStr);
+  events.emit(EVENTS.STATE_READY, STATE);
+  events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
+  events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
+  events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
 }
 
 /**
@@ -156,6 +273,10 @@ export function addTimelineLog(baseId: string, emoji: string, label: string, typ
     if (ongoing) {
       // Stop the ongoing activity
       ongoing.endTime = now;
+      // If caller passed a decorated label (e.g. with selected options), persist it on stop.
+      if (label && label !== ongoing.label) {
+        ongoing.label = label;
+      }
       events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
       _triggerSync();
       return;
@@ -206,6 +327,18 @@ export function setIntention(text: string) {
 
 export function setBattery(level: number) {
   STATE.battery = level;
+  _triggerSync();
+}
+
+export function resetForStartDay(intention: string) {
+  STATE.timeline = [];
+  STATE.expenses = [];
+  STATE.battery = 60;
+  STATE.intention = intention;
+
+  events.emit(EVENTS.STATE_READY, STATE);
+  events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
+  events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
   _triggerSync();
 }
 

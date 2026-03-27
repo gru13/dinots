@@ -16,6 +16,14 @@ import { bootstrapToday, bootstrapConfig } from "./state";
  */
 export function initAuth() {
   const loginBtn = document.getElementById("login-btn");
+  const gateLoginBtn = document.getElementById("gate-login-btn");
+
+  const setAuthGate = (locked: boolean) => {
+    const gate = document.getElementById("auth-gate");
+    if (!gate) return;
+    gate.style.display = locked ? "flex" : "none";
+  };
+
   if (loginBtn) {
     loginBtn.addEventListener("click", async () => {
       if (CURRENT_USER) {
@@ -27,12 +35,22 @@ export function initAuth() {
     });
   }
 
+  if (gateLoginBtn) {
+    gateLoginBtn.addEventListener("click", async () => {
+      await handleLogin();
+    });
+  }
+
+  // Fail-safe default: block app until auth state is confirmed.
+  setAuthGate(true);
+
   // Monitor Auth State
   onAuthStateChanged(auth, async (user) => {
     CURRENT_USER = user;
     if (user) {
       console.log(`[AUTH] Logged in as: ${user.email} (UID: ${user.uid})`);
       updateAuthUI(user);
+      setAuthGate(false);
       
       // derive the E2EE key and unlock the vault automatically.
       await deriveKey(user.uid);
@@ -49,6 +67,7 @@ export function initAuth() {
       IS_VAULT_OPEN = false;
       updateAuthUI(null);
       updateVaultUI(false);
+      setAuthGate(true);
     }
   });
 }
@@ -58,9 +77,14 @@ function updateAuthUI(user: User | null) {
   const userEmailEl = document.getElementById("user-email");
   const userPhotoEl = document.getElementById("user-photo");
   const loginBtn = document.getElementById("login-btn");
+  const headerUserNameEl = document.getElementById("header-user-name");
 
   if (user) {
-    if (userNameEl) userNameEl.textContent = user.displayName || "User";
+    const fullName = user.displayName?.trim() || "User";
+    const firstName = fullName.split(/\s+/)[0] || fullName;
+
+    if (userNameEl) userNameEl.textContent = fullName;
+    if (headerUserNameEl) headerUserNameEl.textContent = firstName;
     if (userEmailEl) userEmailEl.textContent = user.email || "";
     if (userPhotoEl && user.photoURL) {
       userPhotoEl.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
@@ -74,6 +98,7 @@ function updateAuthUI(user: User | null) {
   } else {
     // Reset to generic defaults
     if (userNameEl) userNameEl.textContent = "Guest User";
+    if (headerUserNameEl) headerUserNameEl.textContent = "Guest";
     if (userEmailEl) userEmailEl.textContent = "Not signed in";
     if (userPhotoEl) userPhotoEl.innerHTML = "👤";
     if (loginBtn) {
