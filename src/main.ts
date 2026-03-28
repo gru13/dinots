@@ -1,22 +1,49 @@
 import './config';
 import './styles/app.css';
+import { registerSW } from 'virtual:pwa-register';
 import { initAuth, CURRENT_USER, IS_VAULT_OPEN } from './modules/auth';
 
 import { initLogScreen } from './screens/log';
 import { initMoneyScreen } from './screens/money';
 import { initTasksScreen } from './screens/tasks';
+import { initHistoryScreen } from './screens/history';
 import { initSettingsScreen } from './screens/settings';
 import { bootstrapConfig, bootstrapToday, resetToTodayLocal, _getTodayStr } from './modules/state';
 
 console.log('DINOTS initialized. Bootstrapping modules...');
 
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    window.location.reload();
+  },
+  onOfflineReady() {
+    console.log('[PWA] Offline cache ready.');
+  }
+});
+
+let selectedDateStr = _getTodayStr();
+
+function parseDateStr(dateStr: string) {
+  return new Date(`${dateStr}T00:00:00`);
+}
+
+function formatDateForHeader(dateStr: string) {
+  const d = parseDateStr(dateStr);
+  if (Number.isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function phaseBadge() {
+  return 'Phase (Future)';
+}
+
 // Set up the Top Date format
 function updateTopDate() {
   const dateEl = document.getElementById('top-date');
-  if (dateEl) {
-    const d = new Date();
-    dateEl.textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  }
+  const badgeEl = document.getElementById('top-badge');
+  if (dateEl) dateEl.textContent = formatDateForHeader(selectedDateStr);
+  if (badgeEl) badgeEl.textContent = phaseBadge();
 }
 updateTopDate();
 setInterval(updateTopDate, 60000);
@@ -28,6 +55,7 @@ function handleDayRollover() {
   if (today === lastSeenDate) return;
 
   lastSeenDate = today;
+  selectedDateStr = today;
   console.log(`[MAIN] Day rollover detected: ${today}`);
 
   if (CURRENT_USER && IS_VAULT_OPEN) {
@@ -46,6 +74,7 @@ initAuth();
 initLogScreen();
 initMoneyScreen();
 initTasksScreen();
+initHistoryScreen();
 initSettingsScreen();
 
 // 3. Apply default theme/labels immediately for guests (auth bootstraps cloud config on sign-in)
@@ -64,15 +93,12 @@ navBtns.forEach(btn => {
     // Reset all tabs
     navBtns.forEach(b => {
       b.classList.remove('active');
-      const dot = b.querySelector('.nav-dot') as HTMLElement;
-      if (dot) dot.style.opacity = '0';
     });
     screens.forEach(s => s.classList.remove('active'));
     
     // Activate target
     btn.classList.add('active');
-    const dot = btn.querySelector('.nav-dot') as HTMLElement;
-    if (dot) dot.style.opacity = '1';
+   
     
     const screen = document.getElementById(`screen-${target}`);
     if (screen) screen.classList.add('active');

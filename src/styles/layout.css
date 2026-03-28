@@ -42,12 +42,14 @@
 .top-greeting { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; }
 .top-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); line-height: 1.2; }
 .top-name em { color: var(--amber); font-style: italic; }
+.top-date-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .top-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-align: right; }
+
 .top-day-badge { background: var(--ab); border: 1px solid var(--abr); color: var(--amber); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-top: 4px; display: inline-block; }
 
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-h);
-  background: var(--bg2); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 200;
+  background: var(--bg2); border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(5, 1fr); z-index: 200;
 }
 .nav-btn {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
@@ -57,7 +59,7 @@
 }
 .nav-btn .ico { font-size: 20px; line-height: 1; }
 .nav-btn.active { color: var(--amber); }
-.nav-btn.active .nav-dot { width: 4px; height: 4px; background: var(--amber); border-radius: 50%; margin-bottom: -4px; }
+.nav-btn.active .ico { text-shadow: 0 0 10px rgba(232, 168, 48, 0.6); }
 
 .screen { display: none; padding: 16px; }
 .screen.active { display: block; }

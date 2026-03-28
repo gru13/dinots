@@ -1,4 +1,5 @@
 import { CONFIG, addTimelineLog } from '../../modules/state';
+import { showToast } from '../../modules/toast';
 
 type OptionsMode = 'start' | 'end' | 'instant';
 type ActiveOptionsContext = { act: any; mode: OptionsMode; optionsKey: string };
@@ -119,7 +120,9 @@ function renderOptionsChips() {
 function logInstantOption(val: string) {
   if (!activeOptionsContext) return;
   const act = activeOptionsContext.act;
-  addTimelineLog(act.id, act.emoji, `${act.label} (${val})`, act.type);
+  const label = `${act.label} (${val})`;
+  addTimelineLog(act.id, act.emoji, label, act.type);
+  showToast(`Logged: ${label}`);
   document.getElementById('options-modal')!.style.display = 'none';
   activeOptionsContext = null;
 }
@@ -128,6 +131,7 @@ function skipOptionsLog() {
   if (!activeOptionsContext) return;
   const act = activeOptionsContext.act;
   addTimelineLog(act.id, act.emoji, act.label, act.type);
+  showToast(`Logged: ${act.label}`);
   document.getElementById('options-modal')!.style.display = 'none';
 }
 
@@ -135,7 +139,9 @@ function saveOptionsLog() {
   if (!activeOptionsContext) return;
   const act = activeOptionsContext.act;
   const suffix = selectedOptions.size > 0 ? ` (${Array.from(selectedOptions).join(' • ')})` : '';
-  addTimelineLog(act.id, act.emoji, act.label + suffix, act.type);
+  const label = act.label + suffix;
+  addTimelineLog(act.id, act.emoji, label, act.type);
+  showToast(`Logged: ${label}`);
   document.getElementById('options-modal')!.style.display = 'none';
   activeOptionsContext = null;
 }

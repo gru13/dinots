@@ -21,7 +21,33 @@ export const SYSTEM_DEFAULTS = {
   mockUser: { name: "Guru", email: "guru@example.com" }
 };
 
+export const DEFAULT_CONFIG_VERSION = "2026-03-28";
+
 export const DEFAULT_CONFIG = {
+  _defaults: {
+    activitiesVersion: DEFAULT_CONFIG_VERSION,
+    activitiesPristine: true,
+    quickActionsVersion: DEFAULT_CONFIG_VERSION,
+    quickActionsPristine: true,
+    activityOptionsVersion: DEFAULT_CONFIG_VERSION,
+    activityOptionsPristine: true,
+    categoriesVersion: DEFAULT_CONFIG_VERSION,
+    categoriesPristine: true,
+    categoryColorsVersion: DEFAULT_CONFIG_VERSION,
+    categoryColorsPristine: true,
+    optionsItemsVersion: DEFAULT_CONFIG_VERSION,
+    optionsItemsPristine: true,
+    optionsNestedVersion: DEFAULT_CONFIG_VERSION,
+    optionsNestedPristine: true,
+    panicTriggersVersion: DEFAULT_CONFIG_VERSION,
+    panicTriggersPristine: true,
+    taskDefaultsByWeekdayVersion: DEFAULT_CONFIG_VERSION,
+    taskDefaultsByWeekdayPristine: true,
+    themeVersion: DEFAULT_CONFIG_VERSION,
+    themePristine: true,
+    uiVersion: DEFAULT_CONFIG_VERSION,
+    uiPristine: true
+  },
   ui: {
     topBadge: "Phase 0 · Week 1",
     topEmoji: "🔥",
@@ -69,6 +95,8 @@ export const DEFAULT_CONFIG = {
     { id:'lunch', emoji:'🍛', label:'Lunch', type:'duration' },
     { id:'home', emoji:'🏠', label:'Reached Home', type:'instant' },
     { id:'workout', emoji:'💪', label:'Workout', type:'duration', optionsType:'end', optionsKey:'workout' },
+    { id:'stretch', emoji:'🧘', label:'Stretch', type:'duration', optionsType:'start', optionsKey:'stretch' },
+    { id:'play', emoji:'🎲', label:'Playing', type:'duration', optionsType:'start', optionsKey:'play' },
     { id:'dinner', emoji:'🥘', label:'Dinner', type:'duration' },
     { id:'build', emoji:'🔨', label:'Build Window', type:'duration' },
     { id:'learning',emoji:'📚', label:'Learning', type:'duration' },
@@ -85,7 +113,9 @@ export const DEFAULT_CONFIG = {
     'phone': ['📞 Call', '📸 Insta', '🦸 Comics', '🎵 Spotify', '▶️ YouTube', '💬 WhatsApp', '🌐 Browse', '🎮 Games'],
     '📸 Insta': ['Feed', 'Reels', 'DMs', 'Explore'],
     '▶️ YouTube': ['Shorts', 'Long Form', 'Educational'],
-    'snack': ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit']
+    'snack': ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit'],
+    'play': ['♟️ Chess', '🪀 Carrom'],
+    'stretch': ['🧘 Mobility', '🦵 Legs', '🧍 Full Body']
   },
 
   categories: ['🍛 Food', '🚌 Transport', '☕ Chai', '🛒 Shopping', '💊 Health', '🎮 Fun', '📦 Other'],
@@ -96,7 +126,6 @@ export const DEFAULT_CONFIG = {
     { id: 'qa_coffee', emoji: '☕', label: 'Coffee', type: 'instant' },
     { id: 'qa_meds', emoji: '💊', label: 'Meds', type: 'instant' },
     { id: 'qa_snack', emoji: '🍩', label: 'Snack', type: 'instant', optionsType: 'instant', optionsKey: 'snack' },
-    { id: 'qa_stretch', emoji: '🧘', label: 'Stretch', type: 'duration' },
     { id: 'qa_sun', emoji: '☀️', label: 'Sunshine', type: 'duration' }
   ],
 
@@ -104,14 +133,18 @@ export const DEFAULT_CONFIG = {
     { id: 'opt_commute', key: 'commute', emoji: '🚗', label: 'Commute', values: ['🚇 Metro', '🚌 Bus', '🚕 Cab', '🚶 Walk'] },
     { id: 'opt_workout', key: 'workout', emoji: '💪', label: 'Workout', values: ['🏃 Cardio', '🏋️ Weights', '🧘 Yoga', '🏊 Swim'] },
     { id: 'opt_phone', key: 'phone', emoji: '📱', label: 'Phone', values: ['📞 Call', '📸 Insta', '🦸 Comics', '🎵 Spotify', '▶️ YouTube', '💬 WhatsApp', '🌐 Browse', '🎮 Games'] },
-    { id: 'opt_snack', key: 'snack', emoji: '🍩', label: 'Snack', values: ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit'] }
+    { id: 'opt_snack', key: 'snack', emoji: '🍩', label: 'Snack', values: ['🍫 Chocolate', '🍟 Junk', '🍎 Fruit'] },
+    { id: 'opt_play', key: 'play', emoji: '🎲', label: 'Playing', values: ['♟️ Chess', '🪀 Carrom'] },
+    { id: 'opt_stretch', key: 'stretch', emoji: '🧘', label: 'Stretch', values: ['🧘 Mobility', '🦵 Legs', '🧍 Full Body'] }
   ],
 
   optionsNested: {
     'commute': {},
     'workout': { '🏃 Cardio': ['Treadmill', 'Cycling', 'Running outside'], '🏋️ Weights': ['Upper Body', 'Lower Body', 'Core'] },
     'phone': { '📸 Insta': ['Feed', 'Reels', 'DMs', 'Explore'], '▶️ YouTube': ['Shorts', 'Long Form', 'Educational'] },
-    'snack': {}
+    'snack': {},
+    'play': {},
+    'stretch': {}
   },
 
   taskDefaultsByWeekday: {

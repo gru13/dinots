@@ -1,4 +1,4 @@
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { app } from "../config";
 import { encryptData, decryptData, isVaultUnlocked } from "./crypto";
 import { CURRENT_USER } from "./auth";
@@ -123,4 +123,17 @@ export function saveConfig(configData: any) {
       console.error("[DB] Failed to save config:", err);
     }
   }, DEBOUNCE_MS);
+}
+
+export async function listDayKeys(): Promise<string[]> {
+  if (!CURRENT_USER || !isVaultUnlocked()) return [];
+
+  try {
+    const daysRef = collection(db, "users", CURRENT_USER.uid, "days");
+    const snap = await getDocs(daysRef);
+    return snap.docs.map((d) => d.id).filter((id) => /^\d{4}-\d{2}-\d{2}$/.test(id));
+  } catch (err) {
+    console.error('[DB] Failed to list day keys:', err);
+    return [];
+  }
 }

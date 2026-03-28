@@ -3,10 +3,10 @@ import {
   addOptionItem
 } from '../../modules/state';
 import { events, EVENTS } from '../../modules/events';
-import { renderOptionRows } from './options-manager/options-manager-render';
-import { handleOptionsActionClick } from './options-manager/options-manager-actions';
-import { bindOptionsDragAndDrop } from './options-manager/options-manager-dnd';
-import { pruneStaleInlineEditKeys } from './options-manager/options-manager-utils';
+import { renderOptionRows } from './options-manager/render';
+import { handleOptionsActionClick } from './options-manager/actions';
+import { bindOptionsDragAndDrop } from './options-manager/dnd';
+import { pruneStaleInlineEditKeys } from './options-manager/utils';
 
 let optionsManagerBound = false;
 const editingOptionIds = new Set<string>();

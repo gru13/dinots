@@ -33,9 +33,11 @@
       <div class="top-greeting" id="time-greeting">Good Day</div>
       <div class="top-name"><span id="header-user-name">Guest</span> <em id="top-emoji">🔥</em></div>
     </div>
-    <div style="text-align:right">
-      <div class="top-date" id="top-date">Loading Date...</div>
-      <div class="top-day-badge" id="top-badge">Phase 0 · Week 1</div>
+    <div class="top-right" style="text-align:right">
+      <div class="top-date-row">
+        <div class="top-date" id="top-date">Loading Date...</div>
+      </div>
+      <div class="top-day-badge" id="top-badge">Phase (Future)</div>
     </div>
   </div>
 
@@ -47,7 +49,7 @@
     </div>
 
     <div class="sec-label" id="lbl-battery" style="margin-top: 0;">Mental Battery</div>
-    <div style="background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:24px;">
+    <div id="battery-card" style="background:var(--card); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:24px;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div style="font-size: 13px; color: var(--text3); font-weight: 500;">How wired are you?</div>
         <div id="battery-val-display" style="font-family: 'DM Mono', monospace; font-size: 13px; font-weight: bold; color: var(--text); min-width: 145px; text-align: right;">(Okay) 🔋 60%</div>
@@ -64,7 +66,7 @@
     </div>
 
     <div class="sec-label" id="lbl-quick">Quick Actions</div>
-    <div style="position: relative; margin-bottom: 12px;">
+    <div id="quick-actions-block" style="position: relative; margin-bottom: 12px;">
       <div id="qa-scroll-wrap" class="quick-actions-row"></div>
       <div id="qa-input-wrap" style="display:none; flex-direction: column; gap: 8px;">
         <div style="display: flex; gap: 8px; align-items: center;">
@@ -104,6 +106,44 @@
     <div class="card" id="timeline-wrap" style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:4px 16px;display:none">
       <div id="timeline-list"></div>
     </div>
+
+  </div>
+
+  <!-- SCREEN: HISTORY -->
+  <div class="screen" id="screen-history">
+    <div class="sec-label">History Date</div>
+    <div class="history-calendar-head">
+      <div id="history-selected-date" class="history-selected-date">Pick a date from calendar</div>
+      <button id="history-back-log" class="quick-chip" type="button">Back to Log</button>
+    </div>
+    <div id="history-scroll-calendar" class="history-scroll-calendar"></div>
+
+    <div class="history-day-summary">
+      <div class="history-day-summary-title">Day Snapshot</div>
+      <div class="history-day-summary-grid">
+        <div class="history-day-stat">
+          <div class="history-day-stat-label">Timeline</div>
+          <div class="history-day-stat-val" id="history-day-timeline">0</div>
+        </div>
+        <div class="history-day-stat">
+          <div class="history-day-stat-label">Expenses</div>
+          <div class="history-day-stat-val" id="history-day-expense">0</div>
+        </div>
+        <div class="history-day-stat">
+          <div class="history-day-stat-label">Tasks Completed</div>
+          <div class="history-day-stat-val" id="history-day-completed">0 / 0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-label">Timeline</div>
+    <div class="card history-list-card" id="history-timeline-list"></div>
+
+    <div class="sec-label">Expenses</div>
+    <div class="card history-list-card" id="history-expense-list"></div>
+
+    <div class="sec-label">Completed Tasks</div>
+    <div class="card history-list-card" id="history-task-list"></div>
   </div>
 
   <!-- SCREEN: MONEY -->
@@ -326,10 +366,11 @@
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-target="log"><div class="nav-dot"></div><div class="ico" id="nav-log-ico">📓</div><span id="nav-log-lbl">Log</span></button>
-    <button class="nav-btn" data-target="money"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-money-ico">💰</div><span id="nav-money-lbl">Money</span></button>
-    <button class="nav-btn" data-target="tasks"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-tasks-ico">✅</div><span id="nav-tasks-lbl">Tasks</span></button>
-    <button class="nav-btn" data-target="settings"><div class="nav-dot" style="opacity:0"></div><div class="ico" id="nav-settings-ico">⚙️</div><span id="nav-settings-lbl">Set</span></button>
+    <button class="nav-btn active" data-target="log"><div class="ico" id="nav-log-ico">📓</div><span id="nav-log-lbl">Log</span></button>
+    <button class="nav-btn" data-target="money"><div class="ico" id="nav-money-ico">💰</div><span id="nav-money-lbl">Money</span></button>
+    <button class="nav-btn" data-target="tasks"><div class="ico" id="nav-tasks-ico">✅</div><span id="nav-tasks-lbl">Tasks</span></button>
+    <button class="nav-btn" data-target="history"><div class="ico" id="nav-history-ico">🕰️</div><span id="nav-history-lbl">Old</span></button>
+    <button class="nav-btn" data-target="settings"><div class="ico" id="nav-settings-ico">⚙️</div><span id="nav-settings-lbl">Set</span></button>
   </nav>
 
   <!-- Modals -->

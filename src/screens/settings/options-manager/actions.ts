@@ -15,7 +15,7 @@ import {
   clearValueEditKeysForOption,
   hasCaseInsensitiveMatch,
   joinValueParts
-} from './options-manager-utils';
+} from './utils';
 
 type OptionsActionContext = {
   editingOptionIds: Set<string>;

@@ -8,7 +8,10 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['app-icon.svg', 'app-icon-maskable.svg', 'icon-192.svg', 'icon-512.svg'],
       workbox: {
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+        ,
+        skipWaiting: true
       },
       manifest: {
         id: '/',

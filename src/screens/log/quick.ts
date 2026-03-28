@@ -1,4 +1,5 @@
 import { addTimelineLog, CONFIG, addCustomQuickAction } from '../../modules/state';
+import { showToast } from '../../modules/toast';
 
 type ShowOptionsModal = (act: any, mode: 'start' | 'end' | 'instant') => void;
 type HorizontalScrollBinder = (el: HTMLElement) => void;
@@ -21,10 +22,12 @@ export function setupQuickActions(bindHorizontalScroll: HorizontalScrollBinder, 
         const action = CONFIG.quickActions.find((q: any) => q.id === id);
         if (!action) return;
 
-        if (action.optionsType) {
+        const options = (action.optionsKey && (CONFIG.activityOptions as any)?.[action.optionsKey]) || [];
+        if (action.optionsType && Array.isArray(options) && options.length > 0) {
           showOptionsModal(action, action.optionsType as 'start' | 'end' | 'instant');
         } else {
           addTimelineLog(action.id, action.emoji, action.label, action.type as any);
+          showToast(`Logged: ${action.label}`);
         }
       });
     });
@@ -46,6 +49,7 @@ export function setupQuickActions(bindHorizontalScroll: HorizontalScrollBinder, 
 
       const newId = addCustomQuickAction(label, emoji, type);
       addTimelineLog(newId, emoji, label, type);
+      showToast(`Logged: ${label}`);
 
       document.getElementById('qa-input-wrap')!.style.display = 'none';
       qaWrap.style.display = 'flex';
@@ -92,6 +96,7 @@ export function setupQuickActions(bindHorizontalScroll: HorizontalScrollBinder, 
           chip.addEventListener('click', () => {
             const val = chip.getAttribute('data-panic') || '';
             addTimelineLog('panic', '🚨', `Fatal Loop: ${val}`, 'instant', true);
+            showToast('Logged: Fatal Loop');
             panicWrap.style.display = 'none';
             panicBtn.style.display = 'block';
             panicBtn.textContent = CONFIG.ui.buttons.panic;

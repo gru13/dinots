@@ -1,12 +1,13 @@
 import { addTimelineLog, setIntention, setBattery, STATE, CONFIG, resetForStartDay } from '../modules/state';
+import { showToast } from '../modules/toast';
 import { events, EVENTS } from '../modules/events';
 import {
   setupOptionsModal as bindOptionsModal,
   showOptionsModal,
   rerenderOptionsIfOpen
-} from './log/log-options';
-import { setupQuickActions as bindQuickActions } from './log/log-quick';
-import { renderTimeline as renderTimelineList } from './log/log-timeline';
+} from './log/options';
+import { setupQuickActions as bindQuickActions } from './log/quick';
+import { renderTimeline as renderTimelineList } from './log/timeline';
 
 // ---------- INTERNAL APP LOGIC ----------
 let activeWheelId = 'wake';
@@ -87,6 +88,7 @@ export function initLogScreen() {
       batSlider.value = state.battery || 60;
       updateBatteryDisplay(state.battery || 60);
     }
+    applyDefaultVisibility();
   });
 
   events.on(EVENTS.TIMELINE_UPDATED, () => {
@@ -94,7 +96,7 @@ export function initLogScreen() {
     renderTimeline();
     updateWheel();
   });
-  
+
   events.on(EVENTS.CONFIG_UPDATED, () => {
     renderActivities();
     setupQuickActions();
@@ -107,6 +109,14 @@ export function initLogScreen() {
   setupQuickActions();
   setupOptionsModal();
   setupStartSleepModals();
+  applyDefaultVisibility();
+}
+
+function applyDefaultVisibility() {
+  const panicButton = document.getElementById('panic-wrap') as HTMLElement | null;
+  const panicPanel = document.getElementById('panic-triggers') as HTMLElement | null;
+  if (panicButton) panicButton.style.display = 'block';
+  if (panicPanel) panicPanel.style.display = 'none';
 }
 
 function enableHorizontalWheelScroll(el: HTMLElement) {
@@ -165,11 +175,16 @@ function renderActivities() {
 
   wheel.innerHTML = allCopies.join('');
 
-  const firstInCopy0 = wheel.querySelector('.wheel-item[data-loop-copy="0"][data-base-index="0"]') as HTMLElement | null;
-  const firstInCopy1 = wheel.querySelector('.wheel-item[data-loop-copy="1"][data-base-index="0"]') as HTMLElement | null;
-  if (firstInCopy0 && firstInCopy1) {
-    wheel.dataset.loopCycleWidth = String(firstInCopy1.offsetLeft - firstInCopy0.offsetLeft);
-  }
+  const setLoopWidth = () => {
+    const firstInCopy0 = wheel.querySelector('.wheel-item[data-loop-copy="0"][data-base-index="0"]') as HTMLElement | null;
+    const firstInCopy1 = wheel.querySelector('.wheel-item[data-loop-copy="1"][data-base-index="0"]') as HTMLElement | null;
+    if (firstInCopy0 && firstInCopy1) {
+      wheel.dataset.loopCycleWidth = String(firstInCopy1.offsetLeft - firstInCopy0.offsetLeft);
+    }
+  };
+
+  setLoopWidth();
+  requestAnimationFrame(setLoopWidth);
 
   centerWheelOnActive();
   updateWheel();
@@ -273,6 +288,7 @@ function logSelectedActivity() {
     showOptionsModal(act, 'instant');
   } else {
     addTimelineLog(act.id, act.emoji, act.label, act.type as any);
+    showToast(`Logged: ${act.label}`);
   }
 }
 
@@ -292,7 +308,9 @@ function showEndDayModal() {
 }
 
 function finishDay(crushed: boolean) {
-  addTimelineLog('sleep', '🌙', crushed ? 'Goal Crushed' : 'Goal Missed', 'instant');
+  const label = crushed ? 'Goal Crushed' : 'Goal Missed';
+  addTimelineLog('sleep', '🌙', label, 'instant');
+  showToast(`Logged: ${label}`);
   const modal = document.getElementById('eod-modal');
   if (modal) modal.style.display = 'none';
 }
@@ -314,6 +332,7 @@ function confirmStartDay() {
 
   resetForStartDay(newIntention);
   addTimelineLog(pendingWakeActivity.id, pendingWakeActivity.emoji, pendingWakeActivity.label, pendingWakeActivity.type);
+  showToast(`Logged: ${pendingWakeActivity.label}`);
 
   if (goalInput) goalInput.value = '';
   const modal = document.getElementById('start-day-modal');
