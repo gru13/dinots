@@ -1,7 +1,45 @@
-import { CONFIG, STATE, clearAllLogs, replaceConfig, persistConfig } from '../../modules/state';
+import { CONFIG, STATE, APP_VERSION, clearAllLogs, replaceConfig, persistConfig } from '../../modules/state';
 import { events, EVENTS } from '../../modules/events';
 import { escapeHtml } from './utils';
-import { DEFAULT_CONFIG } from '../../config';
+import { DEFAULT_CONFIG, SYSTEM_DEFAULTS } from '../../config';
+import { listRegisteredUsers } from '../../modules/db';
+
+function formatLastSeen(ts?: number) {
+  const n = Number(ts) || 0;
+  if (!n) return 'n/a';
+  return new Date(n).toLocaleString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+async function renderRegisteredUsers() {
+  const wrap = document.getElementById('settings-users-list');
+  if (!wrap) return;
+
+  wrap.textContent = 'Loading users...';
+
+  const users = await listRegisteredUsers();
+  if (!users.length) {
+    wrap.textContent = 'No users found yet. Users will appear after they sign in.';
+    return;
+  }
+
+  wrap.innerHTML = users.map((u) => {
+    const email = escapeHtml(u.email || 'unknown');
+    const name = escapeHtml(u.displayName || 'User');
+    const lastSeen = escapeHtml(formatLastSeen(u.lastSeenAt));
+    return `<div class="settings-user-row">
+      <div>
+        <div>${name}</div>
+        <div class="settings-user-email">${email}</div>
+      </div>
+      <div class="settings-user-meta">${lastSeen}</div>
+    </div>`;
+  }).join('');
+}
 
 function downloadLogBackup() {
   const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: 'application/json' });
@@ -29,6 +67,7 @@ function downloadUiConfigBackup(fileName: string = 'dinots_ui_config.json') {
 
 export function renderAppInfo() {
   const el = document.getElementById('app-version-info');
+  const footerEl = document.getElementById('settings-version-footer');
   if (!el) return;
 
   const budget = CONFIG.theme?.dailyBudget;
@@ -85,7 +124,14 @@ export function renderAppInfo() {
     <div style="margin-bottom: 6px;">Expenses: <span style="font-family: 'DM Mono', monospace;">${escapeHtml(String(expenseCount))}</span></div>
     <div style="margin-bottom: 6px;">Tasks done: <span style="font-family: 'DM Mono', monospace;">${escapeHtml(String(doneTaskCount))}/${escapeHtml(String(taskList.length))}</span></div>
     <div style="margin-bottom: 6px;">Budget: <span style="font-family: 'DM Mono', monospace;">${escapeHtml(String(currency ?? '₹'))}${escapeHtml(String(budget ?? '—'))}</span></div>
+    <div style="margin-top: 10px;">App Version: <span style="font-family: 'DM Mono', monospace; color: var(--teal);">${escapeHtml(APP_VERSION)}</span></div>
   `;
+
+  if (footerEl) {
+    footerEl.textContent = `DINOTS ${APP_VERSION} · Build ${SYSTEM_DEFAULTS.version}`;
+  }
+
+  void renderRegisteredUsers();
 }
 
 export function bindImportExport() {
@@ -98,6 +144,58 @@ export function bindImportExport() {
   const resetLogBtn = document.getElementById('btn-reset-log');
   const importLogBtn = document.getElementById('btn-import-log');
   const fileLog = document.getElementById('import-file') as HTMLInputElement | null;
+  const refreshCacheBtn = document.getElementById('btn-refresh-cache') as HTMLButtonElement | null;
+
+  if (refreshCacheBtn) {
+    refreshCacheBtn.addEventListener('click', async () => {
+      const ok = window.confirm('Refresh app cache now? This keeps your login and local data, and then reloads the app.');
+      if (!ok) return;
+
+      refreshCacheBtn.disabled = true;
+      refreshCacheBtn.textContent = 'Refreshing...';
+
+      try {
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            await registration.update();
+
+            // Workbox understands SKIP_WAITING; this ensures a waiting worker activates now.
+            if (registration.waiting) {
+              registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            const waitForControllerChange = new Promise<void>((resolve) => {
+              const onChange = () => {
+                navigator.serviceWorker.removeEventListener('controllerchange', onChange);
+                resolve();
+              };
+              navigator.serviceWorker.addEventListener('controllerchange', onChange);
+            });
+
+            await Promise.race([
+              waitForControllerChange,
+              new Promise<void>((resolve) => window.setTimeout(resolve, 1500))
+            ]);
+          }
+        }
+
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch (err) {
+        console.error('[SETTINGS] Failed to refresh cache', err);
+        window.alert('Could not refresh app cache. Please try again.');
+        refreshCacheBtn.disabled = false;
+        refreshCacheBtn.textContent = 'Refresh App Cache';
+        return;
+      }
+
+      const basePath = `${window.location.origin}${window.location.pathname}`;
+      window.location.replace(`${basePath}?refresh=${Date.now()}`);
+    });
+  }
 
   if (importUiBtn && fileUi) {
     importUiBtn.addEventListener('click', () => fileUi.click());

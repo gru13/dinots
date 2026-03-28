@@ -1,4 +1,4 @@
-export const APP_VERSION = 'v1.0.0-beta';
+export const APP_VERSION = 'v1.2.1';
 
 export interface TimelineItem {
   id: string;

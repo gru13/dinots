@@ -1,11 +1,21 @@
 import { deleteTimelineLog, STATE, TimelineItem } from '../../modules/state';
+import { showToast } from '../../modules/toast';
 
 function formatTime(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-function isLocked(createdAt: number) {
-  return Date.now() - createdAt > 3600000;
+function getLockReferenceTime(item: TimelineItem): number | null {
+  const timestamps = [item.createdAt, item.startTime, item.endTime]
+    .filter((value): value is number => Number.isFinite(value as number));
+  if (timestamps.length === 0) return null;
+  return Math.max(...timestamps);
+}
+
+function isLocked(item: TimelineItem) {
+  const ref = getLockReferenceTime(item);
+  if (!ref) return false;
+  return Date.now() - ref > 3600000;
 }
 
 export function renderTimeline() {
@@ -43,7 +53,7 @@ export function renderTimeline() {
       const gap = Math.floor((item.startTime - lastTime) / 60000);
       if (gap >= 30) html += `<div class="timeline-gap" style="opacity:0.5; font-size:10px; padding-left:55px;">⚠️ ${Math.floor(gap / 60)}h ${gap % 60}m unlogged gap</div>`;
     }
-    const locked = isLocked(item.createdAt);
+    const locked = isLocked(item);
     let durHtml = '';
     if (item.type === 'duration' && item.endTime) durHtml = `<div class="tl-duration">${Math.max(1, Math.round((item.endTime - item.startTime) / 60000))} mins</div>`;
 
@@ -65,5 +75,9 @@ export function renderTimeline() {
   list.querySelectorAll('.tl-action-icon.del').forEach((btn) => btn.addEventListener('click', (e) => {
     e.stopPropagation();
     deleteTimelineLog(btn.getAttribute('data-tl-del') || '');
+  }));
+  list.querySelectorAll('.tl-action-icon.locked').forEach((btn) => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showToast('Can delete only within 1 hour of the latest log time.', true);
   }));
 }

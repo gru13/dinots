@@ -1,4 +1,4 @@
-import { addTimelineLog, setIntention, setBattery, STATE, CONFIG, resetForStartDay } from '../modules/state';
+import { addTimelineLog, setIntention, setBattery, STATE, CONFIG, resetForStartDay, hasStartedDayData } from '../modules/state';
 import { showToast } from '../modules/toast';
 import { events, EVENTS } from '../modules/events';
 import {
@@ -326,6 +326,14 @@ function showStartDayModal(act: any) {
 
 function confirmStartDay() {
   if (!pendingWakeActivity) return;
+
+  if (hasStartedDayData()) {
+    showToast('Day already started. Day Start was ignored.', true);
+    const modal = document.getElementById('start-day-modal');
+    if (modal) modal.style.display = 'none';
+    pendingWakeActivity = null;
+    return;
+  }
 
   const goalInput = document.getElementById('new-day-intention') as HTMLInputElement | null;
   const newIntention = goalInput?.value?.trim() || '';

@@ -1,9 +1,26 @@
 import { listDayKeys, loadDay } from '../modules/db';
 import { CONFIG } from '../modules/state';
 
+function escapeHtml(value: unknown) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function formatTime(ts: number) {
   if (!Number.isFinite(ts)) return '--:--';
   return new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatDurationMinutes(start: number, end: number) {
+  const mins = Math.max(1, Math.round((end - start) / 60000));
+  const hours = Math.floor(mins / 60);
+  const rem = mins % 60;
+  if (hours <= 0) return `${mins}m`;
+  return `${hours}h ${rem}m`;
 }
 
 function renderEmpty(el: HTMLElement | null, text: string) {
@@ -43,10 +60,24 @@ function renderTimeline(data: any) {
 
   items.sort((a: any, b: any) => (Number(a?.startTime) || 0) - (Number(b?.startTime) || 0));
   wrap.innerHTML = items.map((item: any) => {
-    const emoji = item?.emoji || '🧩';
-    const label = item?.label || 'Log';
-    const start = formatTime(Number(item?.startTime));
-    return `<div class="history-row"><div class="history-row-main">${emoji} ${label}</div><div class="history-row-meta">${start}</div></div>`;
+    const emoji = escapeHtml(item?.emoji || '🧩');
+    const label = escapeHtml(item?.label || 'Log');
+    const startTs = Number(item?.startTime) || 0;
+    const endTs = Number(item?.endTime) || 0;
+    const hasEnd = endTs > 0;
+    const start = formatTime(startTs);
+    const end = hasEnd ? formatTime(endTs) : '--:--';
+    const duration = hasEnd && startTs > 0 ? ` · ${formatDurationMinutes(startTs, endTs)}` : '';
+    const typeLabel = item?.type === 'duration' ? 'Duration' : 'Instant';
+    const typeText = escapeHtml(typeLabel);
+
+    return `<div class="history-row">
+      <div class="history-row-main">
+        <div>${emoji} ${label}</div>
+        <div class="history-row-sub">${typeText}${hasEnd ? '' : ' · ongoing'}</div>
+      </div>
+      <div class="history-row-meta">${start}${hasEnd ? ` → ${end}` : ''}${duration}</div>
+    </div>`;
   }).join('');
 }
 
@@ -64,8 +95,16 @@ function renderExpenses(data: any) {
   const symbol = String(CONFIG.theme?.currencySymbol || '₹');
   wrap.innerHTML = items.map((item: any) => {
     const amount = Math.round(Number(item?.amount) || 0);
-    const note = item?.note ? String(item.note) : 'Expense';
-    return `<div class="history-row"><div class="history-row-main">${note}</div><div class="history-row-meta">${symbol}${amount}</div></div>`;
+    const note = escapeHtml(item?.note ? String(item.note) : 'Expense');
+    const category = escapeHtml(item?.category ? String(item.category) : 'General');
+    const time = formatTime(Number(item?.timestamp));
+    return `<div class="history-row">
+      <div class="history-row-main">
+        <div>${category}</div>
+        <div class="history-row-sub">${note}</div>
+      </div>
+      <div class="history-row-meta">${escapeHtml(symbol)}${amount} · ${time}</div>
+    </div>`;
   }).join('');
 }
 
@@ -81,8 +120,17 @@ function renderCompletedTasks(data: any, dateStr: string) {
   }
 
   wrap.innerHTML = done.map((task: any) => {
-    const text = task?.text ? String(task.text) : 'Task';
-    return `<div class="history-row"><div class="history-row-main">✅ ${text}</div></div>`;
+    const text = escapeHtml(task?.text ? String(task.text) : 'Task');
+    const source = escapeHtml(task?.source ? String(task.source) : 'manual');
+    const timestamp = Number(task?.timestamp) || 0;
+    const meta = timestamp > 0 ? `${formatTime(timestamp)} · ${source}` : source;
+    return `<div class="history-row">
+      <div class="history-row-main">
+        <div>✅ ${text}</div>
+        <div class="history-row-sub">Completed task</div>
+      </div>
+      <div class="history-row-meta">${meta}</div>
+    </div>`;
   }).join('');
 }
 

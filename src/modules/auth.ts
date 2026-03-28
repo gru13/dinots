@@ -1,6 +1,7 @@
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { app } from "../config";
 import { deriveKey, lockVault } from "./crypto";
+import { upsertUserPresence } from "./db";
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
@@ -51,6 +52,13 @@ export function initAuth() {
       console.log(`[AUTH] Logged in as: ${user.email} (UID: ${user.uid})`);
       updateAuthUI(user);
       setAuthGate(false);
+
+      void upsertUserPresence({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      });
       
       // derive the E2EE key and unlock the vault automatically.
       await deriveKey(user.uid);

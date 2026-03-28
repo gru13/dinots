@@ -4,9 +4,78 @@
 .ts-lbl { font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
 .task-add-row { display: flex; gap: 8px; margin-bottom: 4px; }
 .task-add-btn { width: 44px; height: 44px; background: var(--amber); border: none; border-radius: var(--rs); color: #0D0D0B; font-size: 22px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.task-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border2); cursor: pointer; }
-.task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.task-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 8px; border-bottom: 1px solid var(--border2); cursor: pointer; border-radius: 10px; transition: background .18s ease, transform .18s ease; }
+.task-item:hover { background: rgba(232, 168, 48, 0.07); transform: translateY(-1px); }
+.task-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--text3); flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: all .15s; background: transparent; padding: 0; cursor: pointer; }
 .task-item.done .task-check { background: var(--teal); border-color: var(--teal); }
 .task-item.done .task-check::after { content: '✓'; color: #0D0D0B; font-size: 11px; font-weight: 700; }
 .task-text { flex: 1; font-size: 14px; color: var(--text); line-height: 1.4; padding-top: 1px; }
 .task-item.done .task-text { color: var(--text3); text-decoration: line-through; }
+.task-item.done { background: rgba(45, 201, 138, 0.08); }
+
+.task-drag-handle {
+	color: var(--text3);
+	font-size: 14px;
+	line-height: 1;
+	margin-top: 4px;
+	width: 14px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	cursor: grab;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.task-edit-icon {
+	display: inline-block;
+	transform: rotate(135deg);
+}
+
+.task-actions {
+	display: flex;
+	gap: 6px;
+	margin-left: 8px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.task-action-btn {
+	padding: 4px 8px;
+	font-size: 11px;
+	border: 1px solid var(--border);
+	background: var(--card2);
+	color: var(--text2);
+	transition: all .16s ease;
+}
+
+.task-action-btn:hover {
+	border-color: var(--amber);
+	color: var(--amber);
+	transform: translateY(-1px);
+}
+
+.task-edit-panel {
+	margin-top: 8px;
+	border: 1px dashed var(--border);
+	border-radius: var(--rs);
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.02);
+}
+
+.task-edit-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
+	flex-wrap: wrap;
+}
+
+.task-dragging {
+	opacity: 0.55;
+}
+
+.task-over {
+	border-top: 1px dashed var(--amber);
+	background: rgba(232, 168, 48, 0.08);
+}

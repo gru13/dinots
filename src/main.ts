@@ -9,18 +9,35 @@ import { initTasksScreen } from './screens/tasks';
 import { initHistoryScreen } from './screens/history';
 import { initSettingsScreen } from './screens/settings';
 import { bootstrapConfig, bootstrapToday, resetToTodayLocal, _getTodayStr } from './modules/state';
+import { events, EVENTS } from './modules/events';
 
 console.log('DINOTS initialized. Bootstrapping modules...');
 
-registerSW({
+const updateSW = registerSW({
   immediate: true,
+  onRegisteredSW(_swUrl, registration) {
+    if (!registration) return;
+    // Check for updates periodically so installed PWAs pick up new deploys quickly.
+    setInterval(() => {
+      registration.update();
+    }, 60 * 1000);
+  },
   onNeedRefresh() {
-    window.location.reload();
+    updateSW(true);
   },
   onOfflineReady() {
     console.log('[PWA] Offline cache ready.');
   }
 });
+
+let reloadingForSW = false;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloadingForSW) return;
+    reloadingForSW = true;
+    window.location.reload();
+  });
+}
 
 let selectedDateStr = _getTodayStr();
 
@@ -36,6 +53,44 @@ function formatDateForHeader(dateStr: string) {
 
 function phaseBadge() {
   return 'Phase (Future)';
+}
+
+function setupSyncStatusBadge() {
+  const el = document.getElementById('top-sync-status');
+  if (!el) return;
+
+  const apply = (text: string, color: string) => {
+    el.textContent = text;
+    el.style.color = color;
+  };
+
+  apply('🟢 Synced', 'var(--teal)');
+
+  events.on(EVENTS.DB_SYNC_STATUS, (payload?: { status?: string; retryInMs?: number }) => {
+    const status = String(payload?.status || 'idle');
+    if (status === 'scheduled') {
+      apply('🔄 Syncing...', 'var(--amber)');
+      return;
+    }
+    if (status === 'saving') {
+      apply('🔄 Syncing...', 'var(--amber)');
+      return;
+    }
+    if (status === 'saved') {
+      apply('🟢 Synced', 'var(--teal)');
+      return;
+    }
+    if (status === 'retrying') {
+      const secs = Math.max(1, Math.ceil((Number(payload?.retryInMs) || 0) / 1000));
+      apply(`🔄 Retry ${secs}s`, 'var(--red)');
+      return;
+    }
+    if (status === 'error') {
+      apply('🔴 Save failed', 'var(--red)');
+      return;
+    }
+    apply('🟢 Synced', 'var(--teal)');
+  });
 }
 
 // Set up the Top Date format
@@ -76,6 +131,7 @@ initMoneyScreen();
 initTasksScreen();
 initHistoryScreen();
 initSettingsScreen();
+setupSyncStatusBadge();
 
 // 3. Apply default theme/labels immediately for guests (auth bootstraps cloud config on sign-in)
 bootstrapConfig();

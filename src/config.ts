@@ -14,7 +14,7 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 export const SYSTEM_DEFAULTS = {
-  version: "v9.5 (Flat Composite Options)",
+  version: "v1.2.1",
   defaultCurrency: "₹",
   guestName: "Guest",
   guestEmail: "Not signed in",

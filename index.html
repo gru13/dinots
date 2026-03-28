@@ -35,9 +35,10 @@
     </div>
     <div class="top-right" style="text-align:right">
       <div class="top-date-row">
+        <div class="top-sync-status" id="top-sync-status">Synced</div>
+        <span class="top-row-sep" aria-hidden="true">|</span>
         <div class="top-date" id="top-date">Loading Date...</div>
       </div>
-      <div class="top-day-badge" id="top-badge">Phase (Future)</div>
     </div>
   </div>
 
@@ -204,6 +205,7 @@
         <div><div id="user-name" style="font-size:14px; font-weight:600;">Guest User</div><div id="user-email" style="font-size:11px; color:var(--text3);">Not signed in</div></div>
       </div>
       <button class="add-btn" id="login-btn">Sign in with Google</button>
+      <button class="add-btn settings-cache-refresh-btn" id="btn-refresh-cache" type="button">Refresh App Cache</button>
     </div>
     <div class="sec-label" id="lbl-set-vault">Vault Security (Auto-E2EE)</div>
     <div class="settings-group">
@@ -361,7 +363,12 @@
       </div>
     </details>
     <div class="sec-label" id="lbl-set-info">App Info</div>
+    <div class="settings-group">
+      <div style="margin-bottom: 8px; color: var(--text2); font-weight: 600;">Users Using App</div>
+      <div id="settings-users-list" class="settings-users-list">Loading users...</div>
+    </div>
     <div id="app-version-info" style="font-size:11px; color:var(--text3); padding-bottom: 24px;"></div>
+    <div id="settings-version-footer" class="settings-version-footer"></div>
   </div>
 
   <!-- BOTTOM NAV -->

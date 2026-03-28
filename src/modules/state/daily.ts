@@ -186,8 +186,8 @@ export async function getAvailableLogDates(): Promise<string[]> {
   return Array.from(merged).sort();
 }
 
-function _triggerSync() {
-  saveDay(STATE.date, STATE);
+function _triggerSync(forceImmediate: boolean = false) {
+  saveDay(STATE.date, STATE, forceImmediate);
 }
 
 export function addTimelineLog(baseId: string, emoji: string, label: string, type: 'instant' | 'duration', isPanic: boolean = false) {
@@ -236,7 +236,7 @@ export function updateTimelineLabel(id: string, suffix: string) {
 export function deleteTimelineLog(id: string) {
   STATE.timeline = STATE.timeline.filter((t) => t.id !== id);
   events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
-  _triggerSync();
+  _triggerSync(true);
 }
 
 export function setIntention(text: string) {
@@ -249,7 +249,18 @@ export function setBattery(level: number) {
   _triggerSync();
 }
 
+export function hasStartedDayData(): boolean {
+  const hasTimeline = Array.isArray(STATE.timeline) && STATE.timeline.length > 0;
+  const hasExpenses = Array.isArray(STATE.expenses) && STATE.expenses.length > 0;
+  const hasTaskProgress = Array.isArray(STATE.tasks) && STATE.tasks.some((t) => Boolean(t.done));
+  return hasTimeline || hasExpenses || hasTaskProgress;
+}
+
 export function resetForStartDay(intention: string) {
+  if (hasStartedDayData()) {
+    return;
+  }
+
   STATE.timeline = [];
   STATE.expenses = [];
   STATE.tasks = [];
@@ -261,7 +272,7 @@ export function resetForStartDay(intention: string) {
   events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
   events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
   events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
-  _triggerSync();
+  _triggerSync(true);
 }
 
 export function clearAllLogs() {
@@ -273,7 +284,7 @@ export function clearAllLogs() {
   events.emit(EVENTS.TIMELINE_UPDATED, STATE.timeline);
   events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
   events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
-  _triggerSync();
+  _triggerSync(true);
 }
 
 export function addExpense(amount: number, note: string, category: string) {
@@ -285,7 +296,7 @@ export function addExpense(amount: number, note: string, category: string) {
 export function deleteExpense(id: string) {
   STATE.expenses = STATE.expenses.filter((e) => e.id !== id);
   events.emit(EVENTS.MONEY_UPDATED, STATE.expenses);
-  _triggerSync();
+  _triggerSync(true);
 }
 
 export function addTask(text: string) {
@@ -311,8 +322,55 @@ export function toggleTask(id: string) {
   if (task) {
     task.done = !task.done;
     events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
-    _triggerSync();
+    _triggerSync(true);
   }
+}
+
+export function updateTaskText(id: string, text: string) {
+  const clean = (text || '').trim();
+  if (!clean) return;
+
+  const task = STATE.tasks.find((t) => t.id === id);
+  if (!task) return;
+
+  task.text = clean;
+  events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
+  _triggerSync(true);
+}
+
+export function deleteTask(id: string) {
+  const before = STATE.tasks.length;
+  STATE.tasks = STATE.tasks.filter((t) => t.id !== id);
+  if (STATE.tasks.length === before) return;
+
+  events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
+  _triggerSync(true);
+}
+
+export function reorderTasksForDate(ids: string[], dueDate: string = STATE.date) {
+  if (!Array.isArray(ids) || ids.length === 0) return;
+
+  const dateTasks = STATE.tasks.filter((t) => t.dueDate === dueDate);
+  if (dateTasks.length <= 1) return;
+
+  const byId = new Map(dateTasks.map((t) => [t.id, t]));
+  const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as TaskItem[];
+  if (ordered.length === 0) return;
+
+  const seen = new Set(ordered.map((t) => t.id));
+  const leftovers = dateTasks.filter((t) => !seen.has(t.id));
+  const nextForDate = [...ordered, ...leftovers];
+
+  let cursor = 0;
+  STATE.tasks = STATE.tasks.map((t) => {
+    if (t.dueDate !== dueDate) return t;
+    const next = nextForDate[cursor];
+    cursor += 1;
+    return next || t;
+  });
+
+  events.emit(EVENTS.TASKS_UPDATED, STATE.tasks);
+  _triggerSync(true);
 }
 
 export function _getTodayStr(): string {

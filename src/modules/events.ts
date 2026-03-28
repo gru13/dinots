@@ -50,6 +50,7 @@ export const EVENTS = {
   MONEY_UPDATED: 'state:money',       // Fired when an expense is added
   TASKS_UPDATED: 'state:tasks',       // Fired when tasks change
   CONFIG_UPDATED: 'state:config',     // Fired when user adds custom items
+  DB_SYNC_STATUS: 'db:sync:status',   // Fired when persistence state changes
   VAULT_UNLOCKED: 'plugin:vault:open',// Fired when E2EE keys are derived
   VAULT_LOCKED: 'plugin:vault:close', // Fired when user signs out
 };
